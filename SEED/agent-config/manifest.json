@@ -14,7 +14,7 @@
     },
     {
       "id": "cursor-mdc",
-      "path": ".cursor/rules/specproof.mdc",
+      "path": ".cursor/rules/witness-done.mdc",
       "mode": "wrapped",
       "required": true,
       "frontmatter": {
@@ -47,14 +47,14 @@
     },
     {
       "id": "cline",
-      "path": ".clinerules/specproof.md",
+      "path": ".clinerules/witness-done.md",
       "mode": "copy",
       "required": true,
       "note": "Cline Rules"
     },
     {
       "id": "devin",
-      "path": ".devin/rules/specproof.md",
+      "path": ".devin/rules/witness-done.md",
       "mode": "wrapped",
       "required": true,
       "frontmatter": {
@@ -71,7 +71,7 @@
     },
     {
       "id": "kiro",
-      "path": ".kiro/steering/specproof.md",
+      "path": ".kiro/steering/witness-done.md",
       "mode": "wrapped",
       "required": false,
       "frontmatter": {
@@ -120,7 +120,7 @@
     },
     {
       "path": ".windsurfrules",
-      "reason": "устаревший формат; .devin/rules/specproof.md покрывает тот же инструмент"
+      "reason": "устаревший формат; .devin/rules/witness-done.md покрывает тот же инструмент"
     }
   ],
   "tools_without_slash": [

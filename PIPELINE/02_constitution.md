@@ -7,24 +7,24 @@
 ## Вход
 
 - `AGENTS.md` в корне проекта (создан на шаге 00: блок протокола входа)
-- `@specproof/INPUT/TECH_SPEC.md`
-- `@specproof/OUTPUT/docs/01_analysis.md`
-- `@specproof/OUTPUT/docs/01_questions.md`
-- `@specproof/catalogs/antipatterns.md`
-- `@specproof/catalogs/language-policy.md`
-- `@specproof/TEMPLATES/constitution.md`
-- `@specproof/catalogs/stack-policy.md`
-- `@specproof/catalogs/design-input.md`
-- `@specproof/catalogs/typing-and-tests.md` (**типизация + автотесты**)
-- `@specproof/catalogs/verification-tax.md`
-- `@specproof/catalogs/agent-harness.md`
-- `@specproof/catalogs/agent-rules.md` (**один источник → адаптеры IDE**)
-- `@specproof/catalogs/context-rag.md`
-- `@specproof/catalogs/code-comments.md`
-- `@specproof/TEMPLATES/entry-protocol.md`
-- `@specproof/SEED/cursorrules.template.md`
-- `@specproof/SEED/cursorrules.baseline.md` (ориентир по стилю/жёсткости)
-- `@specproof/SEED/agent-config/manifest.json` (цели генерации)
+- `@witness-done/INPUT/TECH_SPEC.md`
+- `@witness-done/OUTPUT/docs/01_analysis.md`
+- `@witness-done/OUTPUT/docs/01_questions.md`
+- `@witness-done/catalogs/antipatterns.md`
+- `@witness-done/catalogs/language-policy.md`
+- `@witness-done/TEMPLATES/constitution.md`
+- `@witness-done/catalogs/stack-policy.md`
+- `@witness-done/catalogs/design-input.md`
+- `@witness-done/catalogs/typing-and-tests.md` (**типизация + автотесты**)
+- `@witness-done/catalogs/verification-tax.md`
+- `@witness-done/catalogs/agent-harness.md`
+- `@witness-done/catalogs/agent-rules.md` (**один источник → адаптеры IDE**)
+- `@witness-done/catalogs/context-rag.md`
+- `@witness-done/catalogs/code-comments.md`
+- `@witness-done/TEMPLATES/entry-protocol.md`
+- `@witness-done/SEED/cursorrules.template.md`
+- `@witness-done/SEED/cursorrules.baseline.md` (ориентир по стилю/жёсткости)
+- `@witness-done/SEED/agent-config/manifest.json` (цели генерации)
 - `OUTPUT/MANIFEST.md` → поле `PROJECT_ROOT`
 - Если `design_input: present` — прочитай HTML из INPUT и создай черновик `OUTPUT/docs/design-notes.md` по `TEMPLATES/design-notes.md` (финализировать можно на 02 или уточнить на 08; **не позже 09**)
 
@@ -72,13 +72,13 @@ Cline, Windsurf/Devin — сразу читал одни и те же прави
 ### 2. Адаптеры IDE — генерация, не ручная копия
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs rules --sync
-node specproof/SEED/sp-tools/sp.mjs rules --check   # exit 0
+node witness-done/SEED/sp-tools/sp.mjs rules --sync
+node witness-done/SEED/sp-tools/sp.mjs rules --check   # exit 0
 ```
 
-Создаются/обновляются `.cursorrules`, `.cursor/rules/specproof.mdc`, `CLAUDE.md`, `GEMINI.md`,
-`.github/copilot-instructions.md`, `.clinerules/specproof.md`, `.devin/rules/specproof.md`,
-`.junie/guidelines.md`, `.kiro/steering/specproof.md`, `.aider.conf.yml`, команды `/sp`.
+Создаются/обновляются `.cursorrules`, `.cursor/rules/witness-done.mdc`, `CLAUDE.md`, `GEMINI.md`,
+`.github/copilot-instructions.md`, `.clinerules/witness-done.md`, `.devin/rules/witness-done.md`,
+`.junie/guidelines.md`, `.kiro/steering/witness-done.md`, `.aider.conf.yml`, команды `/sp`.
 Канон и карта целей — `catalogs/agent-rules.md`.
 
 Правила:
@@ -101,9 +101,9 @@ DoD: контракты, ошибки, тесты, **lint clean (error=0)**, aut
   PROJECT_ROOT/CLAUDE.md            ← @AGENTS.md + протокол входа
   PROJECT_ROOT/GEMINI.md            ← копия
   PROJECT_ROOT/.github/copilot-instructions.md
-  PROJECT_ROOT/.cursor/rules/specproof.mdc
-  PROJECT_ROOT/.clinerules/specproof.md
-  PROJECT_ROOT/.devin/rules/specproof.md
+  PROJECT_ROOT/.cursor/rules/witness-done.mdc
+  PROJECT_ROOT/.clinerules/witness-done.md
+  PROJECT_ROOT/.devin/rules/witness-done.md
   PROJECT_ROOT/.cursor/commands/sp.md (+ .claude/commands, .gemini/commands)
 
 Появятся на шаге 08:
@@ -111,7 +111,7 @@ DoD: контракты, ошибки, тесты, **lint clean (error=0)**, aut
   PROJECT_ROOT/eslint-plugin-local-rules/
 
 Обновление после правки правил:
-  node specproof/SEED/sp-tools/sp.mjs rules --sync
+  node witness-done/SEED/sp-tools/sp.mjs rules --sync
 
 Бэкапы перезаписанных файлов: OUTPUT/rules/previous/
 ```

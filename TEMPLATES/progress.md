@@ -45,8 +45,8 @@ Roadmap **включает разработку всего P0**. Out-of-scope и
 `roadmaps/progress.d/<Dxx>.md` (формат — `TEMPLATES/progress.d-fragment.md`), сборка:
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs progress --merge   # собрать progress.md из фрагментов
-node specproof/SEED/sp-tools/sp.mjs progress --check   # сверить фрагменты с собранным файлом
+node witness-done/SEED/sp-tools/sp.mjs progress --merge   # собрать progress.md из фрагментов
+node witness-done/SEED/sp-tools/sp.mjs progress --check   # сверить фрагменты с собранным файлом
 ```
 
 Конфликт одного `D` в двух фрагментах решается более новым `updated_at`; при равенстве — отказ со списком.

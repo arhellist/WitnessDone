@@ -38,14 +38,14 @@ Codex, Cursor, Copilot, Cline, Devin/Windsurf, Junie, Kiro, Zed, Claude Code (с
 |------|------------|-------|------------|
 | `AGENTS.md` | Codex, Cursor, Copilot, Cline, Devin, Junie, Kiro, Zed (последним), Claude Code | источник | да |
 | `.cursorrules` | Cursor (legacy), Cline, Zed (**первым**) | копия | да |
-| `.cursor/rules/specproof.mdc` | Cursor Project Rules | обёртка `alwaysApply: true` | да |
+| `.cursor/rules/witness-done.mdc` | Cursor Project Rules | обёртка `alwaysApply: true` | да |
 | `CLAUDE.md` | Claude Code | `@AGENTS.md` + блок протокола | да |
 | `GEMINI.md` | Gemini CLI, Copilot CLI | копия | да |
 | `.github/copilot-instructions.md` | GitHub Copilot | копия | да |
-| `.clinerules/specproof.md` | Cline | копия | да |
-| `.devin/rules/specproof.md` | Devin Desktop (Windsurf) | обёртка `trigger: always_on` | да |
+| `.clinerules/witness-done.md` | Cline | копия | да |
+| `.devin/rules/witness-done.md` | Devin Desktop (Windsurf) | обёртка `trigger: always_on` | да |
 | `.junie/guidelines.md` | Junie | копия | нет |
-| `.kiro/steering/specproof.md` | Kiro | обёртка `inclusion: always` | нет |
+| `.kiro/steering/witness-done.md` | Kiro | обёртка `inclusion: always` | нет |
 | `.aider.conf.yml` | Aider | `read: [AGENTS.md]` | нет |
 | `.cursor/commands/sp.md` | Cursor `/sp` | копия `SEED/commands/sp.md` | да |
 | `.claude/commands/sp.md` | Claude Code `/sp` | копия | нет |
@@ -63,9 +63,9 @@ Codex, Cursor, Copilot, Cline, Devin/Windsurf, Junie, Kiro, Zed, Claude Code (с
 ## Команды
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs rules --list
-node specproof/SEED/sp-tools/sp.mjs rules --sync
-node specproof/SEED/sp-tools/sp.mjs rules --check
+node witness-done/SEED/sp-tools/sp.mjs rules --list
+node witness-done/SEED/sp-tools/sp.mjs rules --sync
+node witness-done/SEED/sp-tools/sp.mjs rules --check
 ```
 
 - `--list` — цели, режим, наличие файла, статус (`ok` / `missing` / `drift`).

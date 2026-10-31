@@ -40,7 +40,7 @@ function parseArgs(argv) {
     }
   }
   if (!out.factory) {
-    const cand = path.join(out.root, 'specproof');
+    const cand = path.join(out.root, 'witness-done');
     out.factory = fs.existsSync(cand) ? cand : path.resolve(__dirname, '../..');
   }
   return out;
@@ -56,7 +56,7 @@ function help() {
 
 function outputDir(root, factory) {
   const a = path.join(factory, 'OUTPUT');
-  const b = path.join(root, 'specproof', 'OUTPUT');
+  const b = path.join(root, 'witness-done', 'OUTPUT');
   if (fs.existsSync(a)) return a;
   if (fs.existsSync(b)) return b;
   return a;
@@ -66,7 +66,7 @@ function findSpecStateDir(root, factory) {
   const cands = [
     path.join(root, 'spec-state'),
     path.join(factory, 'spec-state'),
-    path.join(root, 'specproof', 'spec-state'),
+    path.join(root, 'witness-done', 'spec-state'),
   ];
   for (const c of cands) {
     if (fs.existsSync(c)) return c;

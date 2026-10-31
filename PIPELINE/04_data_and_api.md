@@ -7,8 +7,8 @@
 ## Вход
 
 - `03_architecture.md`, `specs/modules.md`, ТЗ, analysis
-- `@specproof/TEMPLATES/openapi-outline.md`
-- `@specproof/catalogs/antipatterns.md`
+- `@witness-done/TEMPLATES/openapi-outline.md`
+- `@witness-done/catalogs/antipatterns.md`
 
 ## Создай
 

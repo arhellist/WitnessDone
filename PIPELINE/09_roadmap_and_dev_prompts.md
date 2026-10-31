@@ -8,20 +8,20 @@ Tech lead + prompt engineer. Документация + план модулей 
 
 - `OUTPUT/docs/*`, `specs/*`, `security/*`, `rules/*`
 - **`OUTPUT/docs/07_module_plan.md`**, `07_conflicts.md`, `07_methodology_apply.md`, опционально `07_gap_*.md`
-- `@specproof/LIBRARY/*/SPEC.md` — только include/adapt (читать из LIBRARY)
-- `@specproof/TEMPLATES/dev-prompt.md`, `roadmap.md`, `progress.md`, **`coverage-matrix.md`**
-- `@specproof/TEMPLATES/context-pack.md`, `context-index.md`, `evidence.md`
-- `@specproof/catalogs/completeness-policy.md` (**обязательно**, SIZE_BUDGET)
-- `@specproof/catalogs/typing-and-tests.md` (**типы + автотесты в каждом D**)
-- `@specproof/catalogs/verification-tax.md`
-- `@specproof/catalogs/contour-smoke.md`
-- `@specproof/catalogs/context-rag.md`
-- `@specproof/catalogs/agent-harness.md`
-- `@specproof/catalogs/code-comments.md`
-- `@specproof/catalogs/design-input.md`
+- `@witness-done/LIBRARY/*/SPEC.md` — только include/adapt (читать из LIBRARY)
+- `@witness-done/TEMPLATES/dev-prompt.md`, `roadmap.md`, `progress.md`, **`coverage-matrix.md`**
+- `@witness-done/TEMPLATES/context-pack.md`, `context-index.md`, `evidence.md`
+- `@witness-done/catalogs/completeness-policy.md` (**обязательно**, SIZE_BUDGET)
+- `@witness-done/catalogs/typing-and-tests.md` (**типы + автотесты в каждом D**)
+- `@witness-done/catalogs/verification-tax.md`
+- `@witness-done/catalogs/contour-smoke.md`
+- `@witness-done/catalogs/context-rag.md`
+- `@witness-done/catalogs/agent-harness.md`
+- `@witness-done/catalogs/code-comments.md`
+- `@witness-done/catalogs/design-input.md`
 - `OUTPUT/docs/design-notes.md` — если design present
 - `OUTPUT/tooling/cicd-and-environments.md`, `deploy.md`
-- antipatterns, nfr-work-items, `@specproof/VERSION`
+- antipatterns, nfr-work-items, `@witness-done/VERSION`
 - `INPUT/TECH_SPEC.md` §2 / §4 / §12 — для трассировки
 - Черновик срезов из `OUTPUT/docs/01_analysis.md` (если есть)
 
@@ -113,8 +113,8 @@ Tech lead + prompt engineer. Документация + план модулей 
 в нём `updated_at`), а таблица собирается командой:
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs progress --merge    # собрать progress.md из фрагментов
-node specproof/SEED/sp-tools/sp.mjs progress --check    # сверить; exit 2 при расхождении или дубле
+node witness-done/SEED/sp-tools/sp.mjs progress --merge    # собрать progress.md из фрагментов
+node witness-done/SEED/sp-tools/sp.mjs progress --check    # сверить; exit 2 при расхождении или дубле
 ```
 
 Строка `done` без фрагмента — расхождение. `progress.md` помечен `merge=union` в `.gitattributes`.

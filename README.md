@@ -1,4 +1,4 @@
-# Witness Done (v1.28.0) — полное руководство по фабрике
+# Witness Done (v1.29.0) — полное руководство по фабрике
 
 <div align="center">
   <img src="logo.jpg" alt="Witness Done — фабрика спецификаций для AI-агентов" width="560">
@@ -235,7 +235,7 @@ Witness Done лечит не «качество текста», а **две ко
 ## 3. Структура фабрики
 
 ```
-specproof/
+witness-done/
 ├── VERSION                     # версия фабрики (одна на всё)
 ├── ORCHESTRATOR.md             # точка входа для агента: режимы, волны, правила, resume
 ├── AGENTS.md                   # правила агента: источник истины, здесь же протокол входа
@@ -390,29 +390,30 @@ specproof/
 
 ### 4.1 Установка и размещение
 
-**Этот репозиторий и есть папка `specproof`.** При установке она кладётся в проект под этим именем:
+**Этот репозиторий и есть папка `witness-done`.** При установке она кладётся в проект под этим именем:
 
 ```bash
-# SSH — если ключ добавлен в GitHub. <project>/specproof — куда кладём фабрику.
-git clone git@github.com:arhellist/WitnessDone.git <project>/specproof
+# SSH — если ключ добавлен в GitHub. <project>/witness-done — куда кладём фабрику.
+git clone git@github.com:arhellist/WitnessDone.git <project>/witness-done
 # HTTPS — публичный репозиторий, авторизация не нужна.
-git clone https://github.com/arhellist/WitnessDone.git <project>/specproof
+git clone https://github.com/arhellist/WitnessDone.git <project>/witness-done
 # Уже скачан: -r копирует каталог рекурсивно, второй путь — приёмник.
-cp -r WitnessDone <project>/specproof
+cp -r WitnessDone <project>/witness-done
 ```
 
-Имя `specproof` фиксировано не из вкуса:
+Имя `witness-done` фиксировано не из вкуса:
 
-- на нём разрешаются ссылки `@specproof/...` во всех шагах `PIPELINE/`;
-- по нему ищется `OUTPUT/` и `FACTORY_PATH` при запуске CLI;
-- в `MANIFEST` поле `FACTORY_PATH: specproof/` — часть паспорта прогона.
+- на нём разрешаются ссылки `@witness-done/...` во всех шагах `PIPELINE/`;
+- он первый кандидат при поиске `OUTPUT/`; если папки с таким именем нет, CLI берёт каталог,
+  где лежит сам `sp.mjs`, — поэтому переименование папки не ломает запуск;
+- в `MANIFEST` поле `FACTORY_PATH: witness-done/` — часть паспорта прогона.
 
 Проверка после установки:
 
 ```bash
 # run.sh — сам находит свой корень (проверяет VERSION/ORCHESTRATOR.md рядом с собой),
 #           печатает ROOT, проект и OUTPUT/, затем маршрут первого шага. Аргументов нет.
-bash specproof/run.sh
+bash witness-done/run.sh
 ```
 
 Скрипт сам находит свой корень и печатает раскладку: `ROOT` (фабрика) и проект, в котором она стоит.
@@ -420,20 +421,20 @@ bash specproof/run.sh
 Нестандартный путь (папка называется иначе):
 
 ```bash
-# status --factory <путь> — явно указать, где лежит канон, если папка называется не specproof.
-#                        --root <путь> — где проект (по умолчанию текущий каталог).
+# status --factory <путь> — явно указать, где лежит канон. Обычно не нужно: CLI сам берёт
+#                           каталог, в котором лежит sp.mjs. --root <путь> — где проект.
 node <путь>/SEED/sp-tools/sp.mjs status --factory <путь>
 ```
 
-Все подкоманды `sp` принимают `--factory` и `--root`. Внутри `PIPELINE/` путь `@specproof/`
-при этом придётся заменить на фактический — канон рассчитан на имя `specproof`.
+Все подкоманды `sp` принимают `--factory` и `--root`. Внутри `PIPELINE/` путь `@witness-done/`
+при этом придётся заменить на фактический — канон рассчитан на имя `witness-done`.
 
 | Где вы находитесь | Как проверять | Как звучит `PROJECT_ROOT` |
 |---|---|---|
-| В репозитории фабрики (этот репозиторий) | `./validate.sh`, `./run.sh` | каталог, в который установлена папка `specproof` |
-| В проекте с установленной фабрикой | `bash specproof/validate.sh` | корень проекта |
+| В репозитории фабрики (этот репозиторий) | `./validate.sh`, `./run.sh` | каталог, в который установлена папка `witness-done` |
+| В проекте с установленной фабрикой | `bash witness-done/validate.sh` | корень проекта |
 
-Пути внутри скриптов самолокализующиеся: `cd specproof && ./validate.sh` **не нужно** — вы уже в ней.
+Пути внутри скриптов самолокализующиеся: `cd witness-done && ./validate.sh` **не нужно** — вы уже в ней.
 
 ### 4.2 Шаг 1. Подготовка ТЗ (`INPUT/TECH_SPEC.md`)
 
@@ -441,9 +442,9 @@ node <путь>/SEED/sp-tools/sp.mjs status --factory <путь>
    ```bash
    # cp <шаблон> <приёмник>: создаёт INPUT/TECH_SPEC.md из бланка.
    # Существующий файл будет перезаписан — сначала проверь, что он не заполнен.
-   cp specproof/INPUT/TECH_SPEC.template.md specproof/INPUT/TECH_SPEC.md
+   cp witness-done/INPUT/TECH_SPEC.template.md witness-done/INPUT/TECH_SPEC.md
    ```
-   Образец заполненного ТЗ — `specproof/TEMPLATES/examples/TECH_SPEC.demo.md` (пример, не вход проекта).
+   Образец заполненного ТЗ — `witness-done/TEMPLATES/examples/TECH_SPEC.demo.md` (пример, не вход проекта).
 2. Заполните разделы:
    - **§0 Бизнес-цели и KPI (обязательно):** какую ценность несёт продукт, целевые метрики
      (LTV, CAC, Retention, RPS), стратегия GTM. Без этого шаг 01 остановится на `needs_human`.
@@ -473,7 +474,7 @@ node <путь>/SEED/sp-tools/sp.mjs status --factory <путь>
 ### 4.4 Шаг 3. Запуск оркестратора
 
 1. Откройте AI-ассистент (Cursor / Claude Code / Codex / Gemini).
-2. Загрузите **`specproof/ORCHESTRATOR.md`** и отправьте:
+2. Загрузите **`witness-done/ORCHESTRATOR.md`** и отправьте:
    ```text
    Запусти выполнение фабрики по ORCHESTRATOR.md. Начни с волны A.
    ```
@@ -491,7 +492,7 @@ node <путь>/SEED/sp-tools/sp.mjs status --factory <путь>
 ### 4.5 Шаг 4. Обработка вопросов (`NEEDS_HUMAN` и `ANSWERS.md`)
 
 Если в ТЗ есть неоднозначности, оркестратор остановится со статусом `NEEDS_HUMAN` и запишет вопросы
-в **`specproof/INPUT/ANSWERS.md`**.
+в **`witness-done/INPUT/ANSWERS.md`**.
 
 1. Ответьте на вопросы в файле.
 2. Вернитесь в чат:
@@ -512,15 +513,15 @@ Claude Code, Gemini CLI) делает это явно; в остальных и�
 
 ```bash
 # статус: где стоит проект. Аргументов нет.
-node specproof/SEED/sp-tools/sp.mjs status
+node witness-done/SEED/sp-tools/sp.mjs status
 
 # запись входа: "…" — запрос дословно (обязателен).
 #   --kind <kind>   — new | question | change | task | bugfix, если классификация неоднозначна
 #   --source <…>    — chat | issue | doc, откуда пришёл запрос
-node specproof/SEED/sp-tools/sp.mjs intake "Добавь экспорт отчёта в CSV"
+node witness-done/SEED/sp-tools/sp.mjs intake "Добавь экспорт отчёта в CSV"
 
 # маршрут: next: из последней открытой записи. Аргументов нет.
-node specproof/SEED/sp-tools/sp.mjs next
+node witness-done/SEED/sp-tools/sp.mjs next
 ```
 
 Что происходит:
@@ -546,7 +547,7 @@ node specproof/SEED/sp-tools/sp.mjs next
 ```bash
 # decide: решение в журнал. "…" — что решили и почему (обязателен),
 #         --intake <ID> — к какой записи входа привязать, --adr — если решение архитектурное.
-node specproof/SEED/sp-tools/sp.mjs decide "Экспорт только CSV: XLSX не просили" --intake <ID>
+node witness-done/SEED/sp-tools/sp.mjs decide "Экспорт только CSV: XLSX не просили" --intake <ID>
 # → journal/decisions/DEC-001-<slug>.md + индекс journal/decisions.md
 ```
 
@@ -556,15 +557,15 @@ node specproof/SEED/sp-tools/sp.mjs decide "Экспорт только CSV: XLS
 # close: закрыть запись входа.
 #   <ID>        — имя файла в journal/intake/ без .md (обязателен)
 #   --ref <…>   — id change-пакета, Dxx (проверит evidence) или DEC-### (проверит журнал)
-node specproof/SEED/sp-tools/sp.mjs close <ID> --ref DEC-001
+node witness-done/SEED/sp-tools/sp.mjs close <ID> --ref DEC-001
 ```
 
 ### Куда попадает журнал
 
 | Где работаем | Журнал | В git |
 |---|---|---|
-| Проект (`<project>/specproof/`) | `<project>/journal/{intake,decisions}` + индекс `decisions.md` | **коммитится**: решения — часть проекта, а не заметки на ноутбуке |
-| Корень канона (этот репозиторий) | `.specproof-work/{intake,decisions}` | **никогда**: канон поставляется копией, чужие записи в нём недопустимы |
+| Проект (`<project>/witness-done/`) | `<project>/journal/{intake,decisions}` + индекс `decisions.md` | **коммитится**: решения — часть проекта, а не заметки на ноутбуке |
+| Корень канона (этот репозиторий) | `.witness-done-work/{intake,decisions}` | **никогда**: канон поставляется копией, чужие записи в нём недопустимы |
 
 `journal/` создаётся из пустой заготовки `SEED/journal/` (`sp journal --init`, это же делает шаг 00).
 В поставке он пуст: заполненный пример означал бы, что в новый проект приехали чужие решения.
@@ -591,13 +592,13 @@ CLI недоступен — порядок тот же руками по `catal
 |------|------------|-------|
 | `AGENTS.md` | Codex, Cursor, Copilot, Cline, Devin, Junie, Kiro, Zed (последним), Claude Code | **источник** |
 | `.cursorrules` | Cursor (legacy), Cline, Zed (**первым**) | полная копия |
-| `.cursor/rules/specproof.mdc` | Cursor Project Rules | обёртка `alwaysApply: true` |
+| `.cursor/rules/witness-done.mdc` | Cursor Project Rules | обёртка `alwaysApply: true` |
 | `CLAUDE.md` | Claude Code | `@AGENTS.md` + блок протокола |
 | `GEMINI.md` | Gemini CLI | полная копия |
 | `.github/copilot-instructions.md` | GitHub Copilot | полная копия |
-| `.clinerules/specproof.md` | Cline | полная копия |
-| `.devin/rules/specproof.md` | Devin Desktop (Windsurf) | обёртка `trigger: always_on` |
-| `.junie/guidelines.md`, `.kiro/steering/specproof.md` | Junie, Kiro | копия / обёртка |
+| `.clinerules/witness-done.md` | Cline | полная копия |
+| `.devin/rules/witness-done.md` | Devin Desktop (Windsurf) | обёртка `trigger: always_on` |
+| `.junie/guidelines.md`, `.kiro/steering/witness-done.md` | Junie, Kiro | копия / обёртка |
 | `.aider.conf.yml` | Aider | `read: [AGENTS.md]` |
 
 Копия, а не указатель, потому что Zed читает только первый найденный файл списка, а Claude Code
@@ -606,30 +607,30 @@ CLI недоступен — порядок тот же руками по `catal
 
 ```bash
 # rules --list — показать 13 целей адаптеров и состояние каждой: ok | missing | drift.
-node specproof/SEED/sp-tools/sp.mjs rules --list
+node witness-done/SEED/sp-tools/sp.mjs rules --list
 
 # rules --sync — пересобрать адаптеры из AGENTS.md. Единственный режим, который пишет файлы.
 #                --targets id,id — ограничить набор целей, например claude,cursorrules.
-node specproof/SEED/sp-tools/sp.mjs rules --sync
+node witness-done/SEED/sp-tools/sp.mjs rules --sync
 
 # rules --check — сверить без записи; exit 2 при рассинхроне (гейт для CI и pre-commit).
-node specproof/SEED/sp-tools/sp.mjs rules --check
+node witness-done/SEED/sp-tools/sp.mjs rules --check
 ```
 
 Правка правил: только `AGENTS.md` → `sp rules --sync`. Канон и добавление новой цели —
 `catalogs/agent-rules.md`.
 
 **В самом репозитории фабрики правила уже в поставке.** `AGENTS.md` и все обязательные адаптеры
-(`.cursorrules`, `.cursor/rules/specproof.mdc`, `CLAUDE.md`, `GEMINI.md`, Copilot, Cline, Devin,
+(`.cursorrules`, `.cursor/rules/witness-done.mdc`, `CLAUDE.md`, `GEMINI.md`, Copilot, Cline, Devin,
 команды `/sp`) лежат в корне и закоммичены — агент видит конституцию канона сразу после `git clone`,
 без установки. Правка канона изнутри репозитория идёт тем же входом:
 
 ```bash
 # status — корень канона: MANIFEST нет, это норма.
 node SEED/sp-tools/sp.mjs status
-# intake — "…" запрос дословно; журнал уйдёт в .specproof-work/, не в OUTPUT/.
+# intake — "…" запрос дословно; журнал уйдёт в .witness-done-work/, не в OUTPUT/.
 node SEED/sp-tools/sp.mjs intake "…"
-# decide — "…" формулировка решения; журнал локальный: .specproof-work/decisions/
+# decide — "…" формулировка решения; журнал локальный: .witness-done-work/decisions/
 node SEED/sp-tools/sp.mjs decide "…"
 # validate.sh — гейт канона; rules --check — адаптеры не разошлись с AGENTS.md.
 ./validate.sh && node SEED/sp-tools/sp.mjs rules --check
@@ -651,7 +652,7 @@ node SEED/sp-tools/sp.mjs decide "…"
 # cp <хук> .git/hooks/pre-commit — установить хук: git запускает файл с таким именем
 #                                  перед каждым коммитом.
 # chmod +x — сделать его исполняемым, иначе git его проигнорирует.
-cp specproof/SEED/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+cp witness-done/SEED/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 ```
 
 `doctor` видит только файлы: он не знает, что происходило в чате. Дисциплину держит правило,
@@ -659,10 +660,10 @@ cp specproof/SEED/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/ho
 
 ### 4.9 Обновление фабрики
 
-Фабрика лежит папкой `specproof/` внутри проекта, и в этой папке соседствуют **две разные вещи**:
+Фабрика лежит папкой `witness-done/` внутри проекта, и в этой папке соседствуют **две разные вещи**:
 
 ```text
-specproof/
+witness-done/
 ├── VERSION README.md ORCHESTRATOR.md AGENTS.md catalogs/ PIPELINE/ SEED/ TEMPLATES/ LIBRARY/
 │                                    ← КАНОН: обновляется
 ├── INPUT/                           ← вход проекта: не трогать
@@ -672,7 +673,7 @@ specproof/
 Отсюда единственное правило обновления: **заменить канон, сохранить прогон**. Распаковать архив
 поверх нельзя — сотрётся `INPUT/TECH_SPEC.md`, `ANSWERS.md` и весь `OUTPUT/`.
 
-Версия — одна строка в `VERSION` (сейчас `1.28.0`). Проверка обновления не скачивает фабрику, она
+Версия — одна строка в `VERSION` (сейчас `1.29.0`). Проверка обновления не скачивает фабрику, она
 сравнивает эту строку с версией в репозитории из `SEED/update.json`:
 
 ```bash
@@ -681,12 +682,12 @@ specproof/
 #   --no-cache     — игнорировать кэш (он живёт 24 ч)
 #   --timeout <мс> — таймаут HTTPS-запроса, по умолчанию 8000
 #   --json         — машинный вывод
-node specproof/SEED/sp-tools/sp.mjs update                      # проверить (кэш 24 ч)
-node specproof/SEED/sp-tools/sp.mjs update --offline            # только кэш, без сети
-node specproof/SEED/sp-tools/sp.mjs update --no-cache --timeout 3000  # принудительно, таймаут 3 с
+node witness-done/SEED/sp-tools/sp.mjs update                      # проверить (кэш 24 ч)
+node witness-done/SEED/sp-tools/sp.mjs update --offline            # только кэш, без сети
+node witness-done/SEED/sp-tools/sp.mjs update --no-cache --timeout 3000  # принудительно, таймаут 3 с
 
 # status — строка «Версия фабрики» из кэша; в сеть не ходит никогда.
-node specproof/SEED/sp-tools/sp.mjs status
+node witness-done/SEED/sp-tools/sp.mjs status
 ```
 
 Два источника, по порядку:
@@ -711,17 +712,17 @@ node specproof/SEED/sp-tools/sp.mjs status
 
 ```text
 Witness Done update
-локально:  1.16.2   (/app/specproof)
+локально:  1.16.2   (/app/witness-done)
 удалённо:  1.17.0   (arhellist/WitnessDone@main, git-теги)
 установка: git clone
 статус:    доступно обновление
 обновиться:
-  git -C "/app/specproof" pull --ff-only
+  git -C "/app/witness-done" pull --ff-only
   node SEED/sp-tools/sp.mjs rules --sync
   node SEED/sp-tools/sp.mjs doctor --strict
 ```
 
-Кэш — `specproof/.sp-cache/update.json` (в `.gitignore`), TTL 24 ч; `--no-cache` проверяет
+Кэш — `witness-done/.sp-cache/update.json` (в `.gitignore`), TTL 24 ч; `--no-cache` проверяет
 принудительно, `--offline` читает только кэш. `sp status` печатает
 `Версия фабрики: <VERSION> (обновление: …)` и **никогда** не ходит в сеть.
 
@@ -735,9 +736,25 @@ Witness Done update
 
 ```bash
 # После обновления канона: пересобрать адаптеры и проверить вход.
-node specproof/SEED/sp-tools/sp.mjs rules --sync     # адаптеры IDE под новую конституцию
-node specproof/SEED/sp-tools/sp.mjs doctor --strict  # гейт входа; предупреждения = провал
+node witness-done/SEED/sp-tools/sp.mjs rules --sync     # адаптеры IDE под новую конституцию
+node witness-done/SEED/sp-tools/sp.mjs doctor --strict  # гейт входа; предупреждения = провал
 ```
+
+**Переход с версий до 1.29.** Бренд сменился, поэтому папка установки теперь называется
+`witness-done/`. Если в проекте фабрика лежит под прежним именем — переименуйте каталог и
+пересоберите адаптеры:
+
+```bash
+# <project> — корень проекта; <прежняя-папка> — каталог, куда фабрика была установлена раньше.
+mv <project>/<прежняя-папка> <project>/witness-done
+node witness-done/SEED/sp-tools/sp.mjs rules --sync    # адаптеры получат новые имена файлов
+node witness-done/SEED/sp-tools/sp.mjs doctor --strict
+```
+
+Резолвер CLI от имени папки не зависит (он берёт каталог, где лежит `sp.mjs`), но ссылки
+`@witness-done/...` в шагах `PIPELINE/` и поле `FACTORY_PATH` в `MANIFEST` рассчитаны на новое имя.
+Старые файлы правил IDE (`*.mdc`, `*.md` в каталогах адаптеров) после `rules --sync` остаются
+лежать рядом — их нужно удалить руками, иначе в проекте окажутся два набора правил.
 
 ---
 
@@ -891,7 +908,7 @@ node specproof/SEED/sp-tools/sp.mjs doctor --strict  # гейт входа; пр
 - конвейер: зависимости → линт → типы → тесты → дымовой прогон;
 - окружения: что где запускается, переменные, порты, порядок деплоя;
 - **скопировать CLI:** `SEED/sp-tools/` → `PROJECT_ROOT/scripts/sp-tools/` (или оставить
-  `specproof/SEED/sp-tools` и указать путь в `OUTPUT/tooling/`);
+  `witness-done/SEED/sp-tools` и указать путь в `OUTPUT/tooling/`);
 - `OUTPUT/tooling/verify-commands.md` — команды lint/typecheck/test, wave smoke vs product-smoke;
 - `OUTPUT/tooling/harness.md` — цикл работы агента, resume-фразы, запрет `done` без акта;
 - смок-шаблоны из `SEED/smoke/` материализуются в `scripts/smoke/` и `OUTPUT/docs/runbooks/`.
@@ -1494,7 +1511,7 @@ CI — **второй** прогон unit-контура на чистой ма�
 ### 7.10 CLI `sp-tools`
 
 Из корня проекта (после шага 08 CLI скопирован в `scripts/sp-tools/`; иначе — прямо из
-`specproof/SEED/sp-tools/`). Что делает каждая команда и что значит каждый аргумент:
+`witness-done/SEED/sp-tools/`). Что делает каждая команда и что значит каждый аргумент:
 
 ```bash
 # --- вход и маршрут ---------------------------------------------------------
@@ -1679,7 +1696,7 @@ Baseline — не «краткое описание», а набор прове�
 # sp-verify --change <id> --gate change — принять пакет изменения.
 #   --change <id> — каталог spec-state/changes/<id>/ (обязателен для гейта change)
 #   --gate change — гейт R04; его имя фиксировано, других значений для пакета нет
-node specproof/SEED/sp-tools/sp-verify.mjs --change <id> --gate change
+node witness-done/SEED/sp-tools/sp-verify.mjs --change <id> --gate change
 ```
 
 | Что проверяется | Смысл |
@@ -1745,12 +1762,12 @@ node specproof/SEED/sp-tools/sp-verify.mjs --change <id> --gate change
 
 Общие правила для всех команд:
 
-- Запуск — из корня проекта (где лежит `specproof/`) или из корня фабрики.
+- Запуск — из корня проекта (где лежит `witness-done/`) или из корня фабрики.
 - `--root <путь>` — где проект, `--factory <путь>` — где канон. По умолчанию `root` = текущий
-  каталог, `factory` = `<root>/specproof`, а если его нет — каталог самого скрипта.
+  каталог, `factory` = `<root>/witness-done`, а если его нет — каталог самого скрипта.
 - `--help` у любого CLI печатает справку и выходит с кодом `0`.
 - Пути к CLI записываются как `<FACTORY_PATH>/SEED/sp-tools/…`. В обычном проекте это
-  `specproof/SEED/sp-tools/…`, в самом репозитории фабрики — `SEED/sp-tools/…`.
+  `witness-done/SEED/sp-tools/…`, в самом репозитории фабрики — `SEED/sp-tools/…`.
 
 ### 10.1 Скрипты в корне фабрики
 
@@ -1796,7 +1813,7 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs <подкоманда> [аргумен�
 | Флаг | Значение | По умолчанию |
 |------|----------|--------------|
 | `--root <путь>` | Корень проекта: откуда читаются `INPUT/`, `OUTPUT/`, `spec-state/` | текущий каталог |
-| `--factory <путь>` | Корень канона: откуда берутся `SEED/`, `TEMPLATES/`, `catalogs/` | `<root>/specproof`, иначе каталог скрипта |
+| `--factory <путь>` | Корень канона: откуда берутся `SEED/`, `TEMPLATES/`, `catalogs/` | `<root>/witness-done`, иначе каталог скрипта |
 | `--json` | Машинный вывод вместо человекочитаемого | выкл. |
 | `--help`, `-h` | Справка и выход с кодом `0` | — |
 
@@ -1818,9 +1835,9 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs status [--json]
 **Пример.**
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs status
+node witness-done/SEED/sp-tools/sp.mjs status
 # PROJECT_ROOT: /app
-# FACTORY: /app/specproof
+# FACTORY: /app/witness-done
 # MODE: greenfield
 # last_completed_step: 04
 # Следующий шаг: PIPELINE/05_security.md
@@ -1863,13 +1880,13 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs intake "<запрос дословно>
 
 ```bash
 # обычный вызов: классификация автоматическая
-node specproof/SEED/sp-tools/sp.mjs intake "Добавь экспорт отчёта в CSV"
+node witness-done/SEED/sp-tools/sp.mjs intake "Добавь экспорт отчёта в CSV"
 # Wrote journal/intake/20261028-1200-dobav-eksport-otcheta-v-csv.md
 # kind: change (есть незакрытое изменение: add-report-export)
 # next: PIPELINE/R02_propose_change.md (id изменения: dobav-eksport-otcheta-v-csv)
 
 # --kind question — вопрос; --source issue — пришёл из трекера
-node specproof/SEED/sp-tools/sp.mjs intake "Можно ли X?" --kind question --source issue
+node witness-done/SEED/sp-tools/sp.mjs intake "Можно ли X?" --kind question --source issue
 ```
 
 **Коды.** `0` — запись создана; `3` — форма вопроса и глагол изменения одновременно: CLI печатает
@@ -1889,7 +1906,7 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs next
 **Пример.**
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs next
+node witness-done/SEED/sp-tools/sp.mjs next
 # next: PIPELINE/R02_propose_change.md (id изменения: add-report-export)
 ```
 
@@ -1917,7 +1934,7 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs decide "<решение>" [--intake <ID
 **Пример.**
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs decide "Экспорт только CSV: XLSX не просили" --intake 20261028-1200-dobav-eksport
+node witness-done/SEED/sp-tools/sp.mjs decide "Экспорт только CSV: XLSX не просили" --intake 20261028-1200-dobav-eksport
 # Wrote journal/decisions/DEC-001-<slug>.md → DEC-001
 ```
 
@@ -1942,7 +1959,7 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs close <ID> --ref <change-id|Dxx|DEC-###
 **Пример.**
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs close 20261028-1200-dobav-eksport --ref add-report-export
+node witness-done/SEED/sp-tools/sp.mjs close 20261028-1200-dobav-eksport --ref add-report-export
 # closed 20261028-1200-dobav-eksport → add-report-export
 ```
 
@@ -1957,7 +1974,7 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs journal [--init] [--index] [--check [--
 
 **Что делает.** Управляет коммитируемым журналом `<project>/journal`: `intake/`, `decisions/`,
 `decisions.md`. Без флагов печатает сводку: сколько решений, какие записи входа открыты.
-В корне канона журналом считается `.specproof-work/` — тот же CLI, но вне git.
+В корне канона журналом считается `.witness-done-work/` — тот же CLI, но вне git.
 
 | Аргумент | Обязателен | Что значит |
 |----------|-----------|------------|
@@ -1973,14 +1990,14 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs journal [--init] [--index] [--check [--
 
 ```bash
 # создать журнал в проекте (делает и шаг 00)
-node specproof/SEED/sp-tools/sp.mjs journal --init
+node witness-done/SEED/sp-tools/sp.mjs journal --init
 # journal: /app/journal
 
 # после мержа: пересобрать оглавление
-node specproof/SEED/sp-tools/sp.mjs journal --index
+node witness-done/SEED/sp-tools/sp.mjs journal --index
 
 # гейт: дубли и битые ссылки — провал
-node specproof/SEED/sp-tools/sp.mjs journal --check --strict
+node witness-done/SEED/sp-tools/sp.mjs journal --check --strict
 ```
 
 **Коды.** `0` — ok / записано; `2` — проблемы журнала (в `--strict` — включая предупреждения).
@@ -2011,11 +2028,11 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs review <Dxx> --verdict supports|does_no
 **Пример.**
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs review D03 --verdict supports \
+node witness-done/SEED/sp-tools/sp.mjs review D03 --verdict supports \
   --reviewer anna@example.com --notes "A03.2: процесс убит после записи, событие читается"
 # Wrote OUTPUT/evidence/D03.review.json
 
-node specproof/SEED/sp-tools/sp-verify.mjs --d D03 --gate pre_ci
+node witness-done/SEED/sp-tools/sp-verify.mjs --d D03 --gate pre_ci
 ```
 
 **Коды.** `0` — review записан; `1` — нет `<Dxx>`, нет `--verdict`, неизвестный verdict, не известен
@@ -2038,8 +2055,8 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs progress [--merge] [--check]
 **Пример.**
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs progress --merge
-node specproof/SEED/sp-tools/sp.mjs progress --check
+node witness-done/SEED/sp-tools/sp.mjs progress --merge
+node witness-done/SEED/sp-tools/sp.mjs progress --check
 ```
 
 **Коды.** `0` — собрано/согласовано; `2` — расхождение, дубль `D`, нет `progress.md` или таблицы `| D |`.
@@ -2085,10 +2102,10 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs rules --list | --sync [--targets id,id]
 
 ```bash
 # --targets cursorrules,claude — пересобрать только две цели, остальные не трогать
-node specproof/SEED/sp-tools/sp.mjs rules --sync --targets cursorrules,claude
+node witness-done/SEED/sp-tools/sp.mjs rules --sync --targets cursorrules,claude
 
 # --check — сверка без записи; при рассинхроне exit 2
-node specproof/SEED/sp-tools/sp.mjs rules --check   # Правила синхронны (13 целей).
+node witness-done/SEED/sp-tools/sp.mjs rules --check   # Правила синхронны (13 целей).
 ```
 
 **Коды.** `0` — синхронно / записано; `2` — рассинхрон (гейт для CI и pre-commit).
@@ -2121,7 +2138,7 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs doctor [--strict] [--staged] [--team] [
 **Пример.**
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs doctor --strict
+node witness-done/SEED/sp-tools/sp.mjs doctor --strict
 # FAIL адаптер claude (CLAUDE.md): missing — выполнить sp rules --sync
 # doctor: 1 проблем(а/ы) в strict-режиме        → exit 2
 ```
@@ -2149,7 +2166,7 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs update [--json] [--offline] [--no-cache
 **Пример.**
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs update
+node witness-done/SEED/sp-tools/sp.mjs update
 # локально:  1.16.2
 # удалённо:  1.17.0   (arhellist/WitnessDone@main, git-теги)
 # статус:    доступно обновление      → exit 2
@@ -2181,15 +2198,15 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs retrieve --query "jwt" --out OUTPUT/con
 | Цель | Файл | Обязательна |
 |------|------|-------------|
 | `cursorrules` | `.cursorrules` | да |
-| `cursor-mdc` | `.cursor/rules/specproof.mdc` | да |
+| `cursor-mdc` | `.cursor/rules/witness-done.mdc` | да |
 | `claude` | `CLAUDE.md` | да |
 | `gemini` | `GEMINI.md` | да |
 | `copilot` | `.github/copilot-instructions.md` | да |
-| `cline` | `.clinerules/specproof.md` | да |
-| `devin` | `.devin/rules/specproof.md` | да |
+| `cline` | `.clinerules/witness-done.md` | да |
+| `devin` | `.devin/rules/witness-done.md` | да |
 | `cmd-cursor` | `.cursor/commands/sp.md` | да |
 | `junie` | `.junie/guidelines.md` | нет |
-| `kiro` | `.kiro/steering/specproof.md` | нет |
+| `kiro` | `.kiro/steering/witness-done.md` | нет |
 | `aider` | `.aider.conf.yml` | нет |
 | `cmd-claude` | `.claude/commands/sp.md` | нет |
 | `cmd-gemini` | `.gemini/commands/sp.toml` | нет |
@@ -2251,9 +2268,9 @@ node <FACTORY_PATH>/SEED/sp-tools/sp-verify.mjs --d D01 --gate pre_ci
 **Примеры.**
 
 ```bash
-node specproof/SEED/sp-tools/sp-verify.mjs --d D01 --gate pre_ci               # задание D01
-node specproof/SEED/sp-tools/sp-verify.mjs --gate d-prompt-quality --batch 2  # пачка №2
-node specproof/SEED/sp-tools/sp-verify.mjs --change add-user-avatar --gate change  # изменение
+node witness-done/SEED/sp-tools/sp-verify.mjs --d D01 --gate pre_ci               # задание D01
+node witness-done/SEED/sp-tools/sp-verify.mjs --gate d-prompt-quality --batch 2  # пачка №2
+node witness-done/SEED/sp-tools/sp-verify.mjs --change add-user-avatar --gate change  # изменение
 ```
 
 **Коды.** `0` — акт записан и `tax_pass: true`; `2` — провал проверки (акт с `tax_pass: false`
@@ -2283,10 +2300,10 @@ node <FACTORY_PATH>/SEED/sp-tools/sp-retrieve.mjs --reindex
 **Примеры.**
 
 ```bash
-node specproof/SEED/sp-tools/sp-retrieve.mjs --reindex            # перестроить индекс
-node specproof/SEED/sp-tools/sp-retrieve.mjs --d D03 --validate   # проверить pack для D03
+node witness-done/SEED/sp-tools/sp-retrieve.mjs --reindex            # перестроить индекс
+node witness-done/SEED/sp-tools/sp-retrieve.mjs --d D03 --validate   # проверить pack для D03
 # --query — что искать; --out — куда записать собранный pack
-node specproof/SEED/sp-tools/sp-retrieve.mjs --query "JWT auth middleware" \
+node witness-done/SEED/sp-tools/sp-retrieve.mjs --query "JWT auth middleware" \
   --out OUTPUT/context/packs/P-draft.md
 ```
 
@@ -2352,7 +2369,7 @@ node specproof/SEED/sp-tools/sp-retrieve.mjs --query "JWT auth middleware" \
 
 | Где | Как выглядит команда |
 |-----|----------------------|
-| Проект с фабрикой в `specproof/` | `node specproof/SEED/sp-tools/sp.mjs …` |
+| Проект с фабрикой в `witness-done/` | `node witness-done/SEED/sp-tools/sp.mjs …` |
 | Проект после шага 08 (CLI скопирован) | `node scripts/sp-tools/sp.mjs …` |
 | Корень канона (этот репозиторий) | `node SEED/sp-tools/sp.mjs …` |
 | Папка фабрики называется иначе | `node <путь>/SEED/sp-tools/sp.mjs … --factory <путь>` |
@@ -2367,7 +2384,7 @@ node specproof/SEED/sp-tools/sp-retrieve.mjs --query "JWT auth middleware" \
 |------|--------------------|------------|
 | `--help`, `-h` | любая | Справка и выход с кодом `0` |
 | `--root <путь>` | любая | Корень проекта: откуда читаются `INPUT/`, `OUTPUT/`, `spec-state/`. По умолчанию текущий каталог |
-| `--factory <путь>` | любая | Корень канона: откуда берутся `SEED/`, `TEMPLATES/`, `catalogs/`. По умолчанию `<root>/specproof`, иначе каталог скрипта |
+| `--factory <путь>` | любая | Корень канона: откуда берутся `SEED/`, `TEMPLATES/`, `catalogs/`. По умолчанию `<root>/witness-done`, иначе каталог скрипта |
 | `--json` | `status`, `doctor`, `update` | Машинный вывод вместо человекочитаемого |
 | `--kind <new\|question\|change\|task\|bugfix>` | `intake` | Явная классификация запроса; нужна при `exit 3` или когда тип известен человеку |
 | `--source <chat\|issue\|doc>` | `intake` | Происхождение запроса; по умолчанию `chat` |
@@ -2482,7 +2499,7 @@ sp review D03 --verdict supports --reviewer anna@example.com
 sp review D03 --verdict unclear --notes "A03.2 не проверял"
 
 # независимая проверка акта: только файл и дерево, без транскрипта создателя
-node specproof/SEED/sp-tools/sp-verify.mjs --verify-evidence OUTPUT/evidence/D03.json
+node witness-done/SEED/sp-tools/sp-verify.mjs --verify-evidence OUTPUT/evidence/D03.json
 
 # командный прогресс: каждый агент пишет свой фрагмент, progress.md собирается
 sp progress --merge
@@ -2535,7 +2552,7 @@ sp doctor --staged
 sp doctor --strict --json
 
 # --root / --factory — когда проект или канон лежат не рядом со скриптом.
-sp status --root /app --factory /app/specproof
+sp status --root /app --factory /app/witness-done
 ```
 
 ### 11.7 Правила агента и адаптеры IDE
@@ -2556,23 +2573,23 @@ sp rules --check
 ### 11.8 Установка и первый запуск
 
 ```bash
-# clone — SSH (с ключом) или HTTPS (публичный репозиторий); <project>/specproof — куда кладём.
-git clone git@github.com:arhellist/WitnessDone.git <project>/specproof
-git clone https://github.com/arhellist/WitnessDone.git <project>/specproof
+# clone — SSH (с ключом) или HTTPS (публичный репозиторий); <project>/witness-done — куда кладём.
+git clone git@github.com:arhellist/WitnessDone.git <project>/witness-done
+git clone https://github.com/arhellist/WitnessDone.git <project>/witness-done
 # уже скачан: -r копирует рекурсивно в приёмник.
-cp -r WitnessDone <project>/specproof
+cp -r WitnessDone <project>/witness-done
 
 # run.sh — сам находит свой корень, печатает ROOT, проект и OUTPUT/, маршрут первого шага.
 #          Аргументов нет, ничего не меняет.
-bash specproof/run.sh
+bash witness-done/run.sh
 
 # cp <шаблон> <приёмник> — создать INPUT/TECH_SPEC.md из бланка (шаг 01 читает именно его).
 #                          Существующий файл перезапишется — проверь, что он не заполнен.
-cp specproof/INPUT/TECH_SPEC.template.md specproof/INPUT/TECH_SPEC.md
+cp witness-done/INPUT/TECH_SPEC.template.md witness-done/INPUT/TECH_SPEC.md
 
 # Хук pre-commit: git запускает .git/hooks/pre-commit перед каждым коммитом,
 #                chmod +x обязателен, иначе git файл проигнорирует.
-cp specproof/SEED/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+cp witness-done/SEED/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 
 # /sp — слэш-команда агента: проводит запрос через вход (status → intake → next) и стоп до маршрута.
 #       Лежит в .cursor/commands/sp.md, .claude/commands/sp.md, .gemini/commands/sp.toml.
@@ -2644,12 +2661,12 @@ npm run lint && npm run typecheck && npm test
 
 ### 11.11 Правка самого канона
 
-Репозиторий фабрики: папки `specproof/` нет, префикс не нужен, журнал идёт в `.specproof-work/`.
+Репозиторий фабрики: папки `witness-done/` нет, префикс не нужен, журнал идёт в `.witness-done-work/`.
 
 ```bash
 node SEED/sp-tools/sp.mjs status            # status в режиме «корень канона»
-node SEED/sp-tools/sp.mjs intake "…"        # "…" — запрос дословно; журнал → .specproof-work/intake/
-node SEED/sp-tools/sp.mjs decide "…"        # "…" — формулировка решения; → .specproof-work/decisions/
+node SEED/sp-tools/sp.mjs intake "…"        # "…" — запрос дословно; журнал → .witness-done-work/intake/
+node SEED/sp-tools/sp.mjs decide "…"        # "…" — формулировка решения; → .witness-done-work/decisions/
 node SEED/sp-tools/sp.mjs close <ID> --ref DEC-###   # закрыть запись ссылкой на решение
 ./validate.sh                               # обязательный гейт канона: RESULT: PASS
 node SEED/sp-tools/sp.mjs rules --check     # адаптеры не разошлись с AGENTS.md

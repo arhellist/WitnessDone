@@ -9,7 +9,7 @@
 - Пакет изменения: `spec-state/changes/<id>/` (`proposal.md`, `specs/*.md`, `design.md`, `tasks.md`)
 - Отчёт верификации: `OUTPUT/evidence/CHANGE-<id>.json` (обязательно `tax_pass: true`)
 - Базовые спецификации: `spec-state/baseline/<domain>/spec.md`
-- Инструмент контекстного поиска: `@specproof/SEED/sp-tools/sp-retrieve.mjs`
+- Инструмент контекстного поиска: `@witness-done/SEED/sp-tools/sp-retrieve.mjs`
 
 ## Правила
 
@@ -35,11 +35,11 @@
 4. Перемести всё содержимое каталога `spec-state/changes/<id>/` в созданную архивную папку.
 5. Запусти переиндексацию базы знаний и спецификаций:
    ```bash
-   node specproof/SEED/sp-tools/sp-retrieve.mjs --reindex
+   node witness-done/SEED/sp-tools/sp-retrieve.mjs --reindex
    ```
 6. Проверь базовую линию после слияния:
    ```bash
-   node specproof/SEED/sp-tools/sp-verify.mjs --gate baseline
+   node witness-done/SEED/sp-tools/sp-verify.mjs --gate baseline
    ```
    `tax_pass: true` обязателен: слияние не должно оставить требование без `MUST/SHALL` или без двух сценариев.
 7. Обнови `OUTPUT/roadmaps/progress.md`: строку изменения переведи в `done`, укажи `evidence/CHANGE-<id>.json` и перечень обновлённых доменов.

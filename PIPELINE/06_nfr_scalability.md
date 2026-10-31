@@ -7,7 +7,7 @@
 ## Вход
 
 - ТЗ §7, analysis, architecture, data-model
-- `@specproof/catalogs/nfr-checklist.md`
+- `@witness-done/catalogs/nfr-checklist.md`
 - `OUTPUT/roadmaps/coverage-matrix.md` (черновик покрытия из шага 01)
 
 ## Главное правило

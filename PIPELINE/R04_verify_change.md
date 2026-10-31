@@ -11,8 +11,8 @@
 - Пакет изменения: `spec-state/changes/<id>/` (`proposal.md`, `specs/*.md`, `design.md`, `tasks.md`)
 - Базовые спецификации: `spec-state/baseline/`
 - Файлы верификации и каталоги:
-  - `@specproof/catalogs/verification-tax.md`
-  - `@specproof/SEED/sp-tools/sp-verify.mjs`
+  - `@witness-done/catalogs/verification-tax.md`
+  - `@witness-done/SEED/sp-tools/sp-verify.mjs`
 
 ## Правила
 
@@ -36,7 +36,7 @@
    Уровень ниже `L3` файла не требует.
 3. Запусти системный инструмент верификации Witness Done:
    ```bash
-   node specproof/SEED/sp-tools/sp-verify.mjs --change <id> --gate change
+   node witness-done/SEED/sp-tools/sp-verify.mjs --change <id> --gate change
    ```
 4. Проанализируй результат работы верификатора:
    - Если обнаружены ошибки в дельте (синтаксис, несуществующие требования в baseline) — вернись на шаг `R02` для корректировки спецификации;

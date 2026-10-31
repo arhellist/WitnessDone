@@ -58,7 +58,7 @@ function acceptedAcceptances(outRoot) {
 
 /** Фразы, объявленные в контракте: метка в плане не может быть фантомом. */
 function contractAcceptances(outRoot, root) {
-  const p = [path.join(outRoot, '01_contract.md'), path.join(root, 'specproof', 'OUTPUT', '01_contract.md')].find((f) =>
+  const p = [path.join(outRoot, '01_contract.md'), path.join(root, 'witness-done', 'OUTPUT', '01_contract.md')].find((f) =>
     fs.existsSync(f)
   );
   if (!p) return null;

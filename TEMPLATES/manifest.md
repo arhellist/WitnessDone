@@ -13,7 +13,7 @@
 | MODE | greenfield \| brownfield |
 | Режим прогона | full |
 | PROJECT_ROOT | |
-| FACTORY_PATH (путь к фабрике) | `specproof/` |
+| FACTORY_PATH (путь к фабрике) | `witness-done/` |
 | Дата старта прогона | |
 | Версия фабрики | (из `VERSION`) |
 | Профиль | agent-harness \| web-app \| data-platform \| custom (см. `PROFILES.md`) |

@@ -20,7 +20,7 @@ Senior full-stack. Код и тесты по конституции проект
 
 ## Source of truth
 
-1. `specproof/OUTPUT/specs/*`, `OUTPUT/security/*`
+1. `witness-done/OUTPUT/specs/*`, `OUTPUT/security/*`
 2. `.cursorrules` + `AGENTS.md` в корне проекта
 3. `OUTPUT/docs/03_architecture.md`
 4. Код репозитория
@@ -67,7 +67,7 @@ Senior full-stack. Код и тесты по конституции проект
 
 ## Запрещено без запроса
 
-- Трогать `specproof/PIPELINE|SEED|TEMPLATES`
+- Трогать `witness-done/PIPELINE|SEED|TEMPLATES`
 - Коммитить секреты / печатать значения из `.env`
 - Массовые «фиксы скриптом» вместо правок в IDE (если конституция проекта так говорит)
 

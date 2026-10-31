@@ -65,7 +65,7 @@ function parseArgs(argv) {
     else if (a === '--budget-min') out.budgetMin = Number(argv[++i]) || 30;
   }
   if (!out.factory) {
-    const cand = path.join(out.root, 'specproof');
+    const cand = path.join(out.root, 'witness-done');
     out.factory = fs.existsSync(cand) ? cand : path.resolve(__dirname, '../..');
   }
   return out;
@@ -106,7 +106,7 @@ function help() {
 
 function outputDir(root, factory) {
   const a = path.join(factory, 'OUTPUT');
-  const b = path.join(root, 'specproof', 'OUTPUT');
+  const b = path.join(root, 'witness-done', 'OUTPUT');
   if (fs.existsSync(a)) return a;
   if (fs.existsSync(b)) return b;
   return a;
@@ -595,7 +595,7 @@ function resolveAny(root, outRoot, ref) {
   const rel = String(ref || '');
   const candidates = [
     path.resolve(root, rel),
-    path.resolve(root, 'specproof', rel),
+    path.resolve(root, 'witness-done', rel),
     path.join(outRoot, rel.replace(/^OUTPUT\//, '')),
     path.resolve(outRoot, rel),
   ];
@@ -611,7 +611,7 @@ function verifyEvidenceGate(args, outRoot) {
   const rel = args.verifyEvidence;
   const candidates = [
     path.resolve(args.root, rel),
-    path.resolve(args.root, 'specproof', rel),
+    path.resolve(args.root, 'witness-done', rel),
     path.join(outRoot, rel.replace(/^OUTPUT\//, '')),
   ];
   const found = candidates.find((c) => fs.existsSync(c)) || candidates[0];
@@ -1406,7 +1406,7 @@ function findSmokeScript(root) {
     'scripts/smoke/product-smoke.py',
     'scripts/smoke/local-product-smoke.sh',
     'scripts/smoke/local-product-smoke.py',
-    'specproof/OUTPUT/scripts/smoke/product-smoke.sh',
+    'witness-done/OUTPUT/scripts/smoke/product-smoke.sh',
   ];
   return candidates.map((c) => path.join(root, c)).find((p) => fs.existsSync(p)) || null;
 }
@@ -1907,7 +1907,7 @@ function findSpecStateDir(root, factory) {
   const cands = [
     path.join(root, 'spec-state'),
     path.join(factory, 'spec-state'),
-    path.join(root, 'specproof', 'spec-state'),
+    path.join(root, 'witness-done', 'spec-state'),
   ];
   for (const c of cands) {
     if (fs.existsSync(c)) return c;

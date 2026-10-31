@@ -77,7 +77,7 @@
 
 **Platform:** logging-pino / rate-limiting / caching-redis — отметь нужное  
 **Feature:** auth-jwt / websocket-socketio / admin-panel / file-upload / crud-table / payments-stripe / search / email-nodemailer  
-См. полный список: секция LIBRARY в `specproof/README.md`
+См. полный список: секция LIBRARY в `witness-done/README.md`
 
 - [ ] …
 

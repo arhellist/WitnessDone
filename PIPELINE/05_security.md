@@ -7,7 +7,7 @@
 ## Вход
 
 - ТЗ, analysis, architecture, data-model, openapi-outline
-- `@specproof/TEMPLATES/threat-model.md`
+- `@witness-done/TEMPLATES/threat-model.md`
 - модули `LIBRARY/` (если выбраны auth и т.п.)
 
 ## Создай

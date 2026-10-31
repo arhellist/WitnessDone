@@ -25,7 +25,7 @@ adapt implementations to the chosen stack, keep contracts.
 
 ## Source of truth (priority)
 
-1. `specproof/OUTPUT/specs/*` and `OUTPUT/security/*`
+1. `witness-done/OUTPUT/specs/*` and `OUTPUT/security/*`
 2. `AGENTS.md` / `.cursor/rules` / `.cursorrules`
 3. Existing code patterns in repo
 4. Free-form chat instructions (lowest)

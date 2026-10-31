@@ -80,7 +80,7 @@ const NEXT_STEP = {
   R05: 'новый intake kind=change (spec-state/changes/<id>)',
 };
 
-const INSTALL_ROUTE = 'установить фабрику в <project>/specproof/ → PIPELINE/00_bootstrap.md';
+const INSTALL_ROUTE = 'установить фабрику в <project>/witness-done/ → PIPELINE/00_bootstrap.md';
 
 /** Транслитерация для имени файла записи входа: кириллица → латиница. */
 const TRANSLIT = {
@@ -243,7 +243,7 @@ function parseArgs(argv) {
     else out.text.push(a);
   }
   if (!out.factory) {
-    const cand = path.join(out.root, 'specproof');
+    const cand = path.join(out.root, 'witness-done');
     out.factory = fs.existsSync(cand) ? cand : path.resolve(__dirname, '../..');
   }
   return out;
@@ -288,11 +288,11 @@ function help() {
 
 /**
  * Журнал сопровождения канона. В репозитории фабрики OUTPUT/ обязан быть пустым
- * (validate.sh), поэтому записи входа и решения мейнтейнера идут в .specproof-work/
+ * (validate.sh), поэтому записи входа и решения мейнтейнера идут в .witness-done-work/
  * (в .gitignore, в поставку не попадают).
  */
 function canonJournalDir(factory) {
-  return path.join(factory, '.specproof-work');
+  return path.join(factory, '.witness-done-work');
 }
 
 function outputDir(root, factory) {
@@ -303,7 +303,7 @@ function outputDir(root, factory) {
     !fs.existsSync(path.join(factory, 'OUTPUT', 'MANIFEST.md'));
   if (isCanon) return canonJournalDir(factory);
   const a = path.join(factory, 'OUTPUT');
-  const b = path.join(root, 'specproof', 'OUTPUT');
+  const b = path.join(root, 'witness-done', 'OUTPUT');
   if (fs.existsSync(a)) return a;
   if (fs.existsSync(b)) return b;
   return a;
@@ -373,7 +373,7 @@ function findSpecStateDir(root, factory) {
   const cands = [
     path.join(root, 'spec-state'),
     path.join(factory, 'spec-state'),
-    path.join(root, 'specproof', 'spec-state'),
+    path.join(root, 'witness-done', 'spec-state'),
   ];
   for (const c of cands) if (fs.existsSync(c)) return c;
   return path.join(root, 'spec-state');
@@ -391,11 +391,11 @@ function activeChanges(args) {
 
 /**
  * Корень журнала. Журнал проекта — `<project>/journal`, он коммитится: это источник правды о
- * решениях. Журнал самого канона — `.specproof-work/` в корне фабрики: локальный, вне git,
+ * решениях. Журнал самого канона — `.witness-done-work/` в корне фабрики: локальный, вне git,
  * потому что канон — поставляемое дерево, и чужие записи в нём недопустимы.
  */
 function journalDir(outRoot) {
-  if (path.basename(outRoot) === '.specproof-work') return outRoot;
+  if (path.basename(outRoot) === '.witness-done-work') return outRoot;
   const factory = path.dirname(outRoot);
   return path.join(path.dirname(factory), 'journal');
 }
@@ -1747,10 +1747,10 @@ function canonDoctor(args, outRoot) {
   }
 
   // Журнал сопровождения канона не должен попадать в git
-  const work = path.join(args.factory, '.specproof-work');
+  const work = path.join(args.factory, '.witness-done-work');
   if (fs.existsSync(work)) {
-    const ignored = git(['check-ignore', path.relative(args.factory, work) || '.specproof-work'], args.factory);
-    if (ignored === null) warnings.push('.specproof-work/ существует, но не в .gitignore — журнал канона уедет в репозиторий');
+    const ignored = git(['check-ignore', path.relative(args.factory, work) || '.witness-done-work'], args.factory);
+    if (ignored === null) warnings.push('.witness-done-work/ существует, но не в .gitignore — журнал канона уедет в репозиторий');
   }
 
   // Заготовка журнала проекта: поставляется пустой, иначе чужие решения уедут в каждый проект
@@ -2156,7 +2156,7 @@ function fetchText(url, timeoutMs) {
   return new Promise((resolve) => {
     let req;
     try {
-      req = https.get(url, { headers: { 'user-agent': 'specproof-sp-update' } }, (res) => {
+      req = https.get(url, { headers: { 'user-agent': 'witness-done-sp-update' } }, (res) => {
         const chunks = [];
         res.on('data', (c) => chunks.push(c));
         res.on('end', () =>
@@ -2289,8 +2289,8 @@ function updateHint(args, factory, local, cfg) {
   }
   return [
     '# установка копированием: заменить канон, сохранив INPUT/ и OUTPUT/',
-    `git clone --depth 1 https://github.com/${cfg.repo}.git /tmp/specproof-new`,
-    `cp -r /tmp/specproof-new/{VERSION,README.md,ORCHESTRATOR.md,PROFILES.md,AGENTS.md,run.sh,validate.sh,catalogs,PIPELINE,SEED,TEMPLATES,LIBRARY} "${factory}/"`,
+    `git clone --depth 1 https://github.com/${cfg.repo}.git /tmp/witness-done-new`,
+    `cp -r /tmp/witness-done-new/{VERSION,README.md,ORCHESTRATOR.md,PROFILES.md,AGENTS.md,run.sh,validate.sh,catalogs,PIPELINE,SEED,TEMPLATES,LIBRARY} "${factory}/"`,
     'node SEED/sp-tools/sp.mjs rules --sync',
   ];
 }

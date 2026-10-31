@@ -7,7 +7,7 @@ ERR=0
 ok() { echo "  OK  $*"; }
 fail() { echo "  FAIL $*"; ERR=1; }
 
-echo "=== validate specproof ==="
+echo "=== validate witness-done ==="
 echo "Root: $ROOT"
 
 # VERSION
@@ -721,8 +721,8 @@ else
 fi
 
 # --- 1.16: канон правится изнутри репозитория ---
-for f in .cursorrules .cursor/rules/specproof.mdc .cursor/commands/sp.md CLAUDE.md GEMINI.md \
-         .github/copilot-instructions.md .clinerules/specproof.md .devin/rules/specproof.md; do
+for f in .cursorrules .cursor/rules/witness-done.mdc .cursor/commands/sp.md CLAUDE.md GEMINI.md \
+         .github/copilot-instructions.md .clinerules/witness-done.md .devin/rules/witness-done.md; do
   [[ -f "$ROOT/$f" ]] && ok "адаптер в поставке: $f" || fail "адаптер отсутствует: $f"
 done
 if command -v node >/dev/null 2>&1; then
@@ -783,7 +783,7 @@ else
   fail "README §10 (все команды управления) отсутствует или неполный"
 fi
 if grep -q 'корень канона' "$ROOT/SEED/sp-tools/USAGE.md" \
-  && grep -q '\.specproof-work' "$ROOT/SEED/sp-tools/USAGE.md"; then
+  && grep -q '\.witness-done-work' "$ROOT/SEED/sp-tools/USAGE.md"; then
   ok "USAGE описывает режим корня канона"
 else
   fail "USAGE не описывает режим корня канона"
@@ -883,10 +883,10 @@ if grep -q 'sp.mjs --help\|sp.mjs status' "$ROOT/README.md" \
 else
   fail "README missing install/entry/rules sections"
 fi
-if grep -n 'cd specproof' "$ROOT/README.md" "$ROOT/run.sh" 2>/dev/null | grep -v 'не нужно' | grep -q .; then
-  fail "docs still instruct 'cd specproof && ./validate.sh'"
+if grep -n 'cd witness-done' "$ROOT/README.md" "$ROOT/run.sh" 2>/dev/null | grep -v 'не нужно' | grep -q .; then
+  fail "docs still instruct 'cd witness-done && ./validate.sh'"
 else
-  ok "no stale 'cd specproof' instructions"
+  ok "no stale 'cd witness-done' instructions"
 fi
 
 ORCH_COUNT=$(find "$ROOT" -name ORCHESTRATOR.md -not -path '*/node_modules/*' -not -path '*/.git/*' | wc -l)
@@ -922,7 +922,8 @@ fi
 
 [[ -f "$ROOT/SEED/sp-tools/selftest.sh" ]] && ok "SEED/sp-tools/selftest.sh" || fail "selftest.sh missing"
 
-# Бренд (DEC-028): в текстах — Witness Done; пути, команды и remote не переименовываются
+# Бренд (DEC-030): старое имя отсутствует полностью — в текстах, путях, именах файлов и папок.
+# Литерал собран из частей, чтобы валидатор не находил сам себя.
 OLD_BRAND='Spec''Proof'
 if head -1 "$ROOT/AGENTS.md" | grep -q 'Witness Done' \
   && head -1 "$ROOT/README.md" | grep -q '^# Witness Done (v' \
@@ -931,15 +932,34 @@ if head -1 "$ROOT/AGENTS.md" | grep -q 'Witness Done' \
 else
   fail "бренд: AGENTS.md, заголовок README или вывод sp status всё ещё старые"
 fi
-STALE_BRAND=$(grep -rn "${OLD_BRAND}" "$ROOT" \
-  --exclude-dir=.git --exclude-dir=.specproof-work --exclude-dir=.sp-cache \
+STALE_BRAND=$(grep -rniF "${OLD_BRAND}" "$ROOT" \
+  --exclude-dir=.git --exclude-dir=.witness-done-work --exclude-dir=.sp-cache \
   --exclude-dir=node_modules 2>/dev/null | wc -l || true)
 if [[ "$STALE_BRAND" -eq 0 ]]; then
   ok "нет остатков бренда ${OLD_BRAND} ни в текстах, ни в адресах"
 else
   fail "остался старый бренд ${OLD_BRAND} в $STALE_BRAND строк(ах)"
-  grep -rn "${OLD_BRAND}" "$ROOT" --exclude-dir=.git --exclude-dir=.specproof-work \
-    --exclude-dir=.sp-cache 2>/dev/null | head -3
+  grep -rniF "${OLD_BRAND}" "$ROOT" --exclude-dir=.git --exclude-dir=.witness-done-work \
+    --exclude-dir=.sp-cache --exclude-dir=node_modules 2>/dev/null | head -3
+fi
+
+# Раскладка установки одна: <project>/witness-done/ — и в README, и в маршруте, который печатает CLI
+if grep -q '<project>/witness-done/' "$ROOT/README.md" \
+  && grep -q "INSTALL_ROUTE = 'установить фабрику в <project>/witness-done/" "$ROOT/SEED/sp-tools/sp.mjs"; then
+  ok "путь установки <project>/witness-done/ согласован: README ↔ sp status"
+else
+  fail "путь установки разошёлся: README и INSTALL_ROUTE в sp.mjs"
+fi
+# Имя папки — не контракт: раскладка не может определяться через basename
+if grep -q 'basename "\$ROOT"' "$ROOT/run.sh"; then
+  fail "run.sh определяет раскладку по имени папки — должно быть по наличию OUTPUT/"
+else
+  ok "run.sh не зависит от имени папки фабрики"
+fi
+if grep -q '^\.witness-done-work/$' "$ROOT/.gitignore"; then
+  ok ".witness-done-work/ в .gitignore"
+else
+  fail ".witness-done-work/ не игнорируется"
 fi
 
 # Адрес репозитория один: update.json (источник для sp update) и инструкции clone в README

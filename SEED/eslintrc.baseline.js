@@ -70,7 +70,7 @@ module.exports = {
     '**/dist',
     '**/node_modules',
     'coverage',
-    'specproof',
+    'witness-done',
     '**/*.test.ts',
     '**/*.test.tsx',
     '**/*.spec.ts',

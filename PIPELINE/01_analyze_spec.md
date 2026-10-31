@@ -7,19 +7,19 @@
 
 ## Вход
 
-- `@specproof/INPUT/TECH_SPEC.md`
-- `@specproof/INPUT/ANSWERS.md` (если уже заполнен — учесть)
-- `@specproof/OUTPUT/MANIFEST.md`
-- `@specproof/catalogs/business-goals.md` (**обязательно**)
-- `@specproof/catalogs/antipatterns.md`
-- `@specproof/catalogs/nfr-checklist.md`
-- `@specproof/README.md` (секция LIBRARY)
-- `@specproof/PROFILES.md`
-- `@specproof/LIBRARY/methodology-architecture/SPEC.md`
-- `@specproof/catalogs/stack-policy.md` (**стек — решение команды: любой язык, FE, infra**)
-- `@specproof/catalogs/completeness-policy.md`
-- `@specproof/catalogs/design-input.md`
-- `@specproof/catalogs/cicd-environments.md`
+- `@witness-done/INPUT/TECH_SPEC.md`
+- `@witness-done/INPUT/ANSWERS.md` (если уже заполнен — учесть)
+- `@witness-done/OUTPUT/MANIFEST.md`
+- `@witness-done/catalogs/business-goals.md` (**обязательно**)
+- `@witness-done/catalogs/antipatterns.md`
+- `@witness-done/catalogs/nfr-checklist.md`
+- `@witness-done/README.md` (секция LIBRARY)
+- `@witness-done/PROFILES.md`
+- `@witness-done/LIBRARY/methodology-architecture/SPEC.md`
+- `@witness-done/catalogs/stack-policy.md` (**стек — решение команды: любой язык, FE, infra**)
+- `@witness-done/catalogs/completeness-policy.md`
+- `@witness-done/catalogs/design-input.md`
+- `@witness-done/catalogs/cicd-environments.md`
 - Опционально: `INPUT/DESIGN.html`, `INPUT/design/*.html`
 
 ## Запрещено

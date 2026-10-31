@@ -8,7 +8,7 @@
 <!-- SP-ENTRY-PROTOCOL v1 -->
 ## Протокол входа (выше конституции)
 
-1. Первое действие в любом чате — `node specproof/SEED/sp-tools/sp.mjs status`.
+1. Первое действие в любом чате — `node witness-done/SEED/sp-tools/sp.mjs status`.
 2. Любой запрос — `sp intake "<запрос дословно>"`, затем работа строго по `next:`.
 3. Выбор, догадка, компромисс, конфликт контрактов — `sp decide "<решение>"` **до** кода.
 4. Runtime-код — только по `Dxx` или по `spec-state/changes/<id>/`; «быстро поправить» нельзя.
@@ -22,9 +22,9 @@
 
 ## Source of truth (приоритет)
 
-1. `specproof/OUTPUT/specs/*`, `OUTPUT/security/*`
+1. `witness-done/OUTPUT/specs/*`, `OUTPUT/security/*`
 2. Этот файл `.cursorrules` и `AGENTS.md`
-3. `specproof/OUTPUT/docs/03_architecture.md`
+3. `witness-done/OUTPUT/docs/03_architecture.md`
 4. Существующий код в репозитории
 5. Свободные указания в чате (низший приоритет)
 
@@ -85,7 +85,7 @@
 ## VerificationTax + Agent Harness (обязательно)
 
 - Канон: `catalogs/verification-tax.md`, `catalogs/agent-harness.md`, `catalogs/contour-smoke.md`
-- CLI: `scripts/sp-tools/sp-verify.mjs` (или `specproof/SEED/sp-tools/`, если не копировали)
+- CLI: `scripts/sp-tools/sp-verify.mjs` (или `witness-done/SEED/sp-tools/`, если не копировали)
 - Каждый runtime D: **HOW + INVARIANTS + ACCEPTANCE**; тесты = `Axx.*`
 - Фича принимается в scopes **unit → module → app → eco**, локально **до CI**
 - После PRODUCES: `sp-verify --d Dxx --gate pre_ci` → evidence с `acceptance_ids` (+ `ops_checked` для L2/L3)
@@ -117,7 +117,7 @@
 
 ## Какие файлы не трогать без запроса
 
-- `specproof/PIPELINE/`, `SEED/`, `TEMPLATES/`
+- `witness-done/PIPELINE/`, `SEED/`, `TEMPLATES/`
 - Секреты и значения боевого `.env`
 
 ## Стиль

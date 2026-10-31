@@ -27,9 +27,9 @@
 Связанные модули LIBRARY (не дублировать, а CONSUMES): […]
 Ограничения OUT OF SCOPE: […]
 
-Опирайся на канон: @specproof/LIBRARY/methodology-architecture/SPEC.md
-Формат секций — как в @specproof/TEMPLATES/library-module.md и существующих SPEC
-(например @specproof/LIBRARY/auth-jwt/SPEC.md).
+Опирайся на канон: @witness-done/LIBRARY/methodology-architecture/SPEC.md
+Формат секций — как в @witness-done/TEMPLATES/library-module.md и существующих SPEC
+(например @witness-done/LIBRARY/auth-jwt/SPEC.md).
 
 Обязательно включи:
 1. Назначение

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Самолокализующийся запуск: работает и в репозитории фабрики, и в <project>/specproof/.
+# Самолокализующийся запуск: работает и в репозитории фабрики, и в <project>/witness-done/.
 # ROOT — корень фабрики (там, где лежит этот файл); PROJECT_ROOT — проект, в который она установлена.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -8,12 +8,13 @@ VER="$(tr -d '[:space:]' < "$ROOT/VERSION" 2>/dev/null || echo '?')"
 
 echo "=== Witness Done v$VER ==="
 echo "Фабрика (ROOT): $ROOT"
-if [[ "$(basename "$ROOT")" == "specproof" ]]; then
+# Раскладка определяется по наличию OUTPUT/, а не по имени папки: имя не контракт.
+if [[ -d "$ROOT/OUTPUT" ]]; then
   echo "Проект:         $PARENT"
-  echo "Раскладка:      $PARENT/specproof/OUTPUT/  ← артефакты прогона"
+  echo "Раскладка:      $ROOT/OUTPUT/  ← артефакты прогона"
 else
-  echo "Режим:          репозиторий фабрики (этот каталог и есть папка specproof)"
-  echo "При установке:  <project>/specproof/OUTPUT/  ← артефакты прогона"
+  echo "Режим:          репозиторий фабрики (OUTPUT ещё не создан)"
+  echo "При установке:  <project>/witness-done/OUTPUT/  ← артефакты прогона"
 fi
 echo
 echo "1) Проверка канона:  bash \"$ROOT/validate.sh\""

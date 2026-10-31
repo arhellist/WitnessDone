@@ -11,10 +11,10 @@
 - Действующий baseline спецификаций: `spec-state/baseline/<domain>/spec.md`
 - Конфигурация спецификаций: `spec-state/config.yaml`
 - Шаблоны пакета изменений:
-  - `@specproof/TEMPLATES/change-proposal.md`
-  - `@specproof/TEMPLATES/change-delta-spec.md`
-  - `@specproof/TEMPLATES/change-design.md`
-  - `@specproof/TEMPLATES/change-tasks.md`
+  - `@witness-done/TEMPLATES/change-proposal.md`
+  - `@witness-done/TEMPLATES/change-delta-spec.md`
+  - `@witness-done/TEMPLATES/change-design.md`
+  - `@witness-done/TEMPLATES/change-tasks.md`
 - Бизнес-запрос или тикет с описанием желаемого изменения.
 
 ## Правила
@@ -51,7 +51,7 @@
    - Каждая задача — со ссылкой на утверждение (`Axx.k` / `Rxx`).
 7. Проверь синтаксическую корректность пакета изменения через инструмент верификации:
    ```bash
-   node specproof/SEED/sp-tools/sp-verify.mjs --change <id> --gate change
+   node witness-done/SEED/sp-tools/sp-verify.mjs --change <id> --gate change
    ```
    *(На этапе R02 допускается незавершённость чеклиста tasks.md, но структура дельты и ссылки на baseline обязаны быть корректными).*
 8. Зафиксируй событие в `OUTPUT/docs/00_run_log.md`.

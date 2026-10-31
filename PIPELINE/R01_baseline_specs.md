@@ -13,7 +13,7 @@
   - `OUTPUT/specs/domain-rules.md`
   - `OUTPUT/docs/07_module_plan.md`
   - `OUTPUT/roadmaps/coverage-matrix.md`
-- Шаблон конфигурации: `@specproof/TEMPLATES/spec-state-config.yaml`
+- Шаблон конфигурации: `@witness-done/TEMPLATES/spec-state-config.yaml`
 
 ## Правила
 
@@ -60,11 +60,11 @@
    - Зафиксируй перечень созданных доменных спецификаций.
 5. Зафиксируй запись в `OUTPUT/docs/00_run_log.md`.
 6. Выполни проверку базовой линии:
-   - `node specproof/SEED/sp-tools/sp-verify.mjs --gate baseline --root PROJECT_ROOT`
+   - `node witness-done/SEED/sp-tools/sp-verify.mjs --gate baseline --root PROJECT_ROOT`
    - Статус `tax_pass: true` обязателен: у каждого требования `MUST`/`SHALL` и ≥2 сценария
      (`happy path` + `negative / boundary`). Провал → исправить `spec.md` и повторить.
 7. Выполни индексацию спецификаций через инструмент retrieval:
-   - `node specproof/SEED/sp-tools/sp-retrieve.mjs --reindex` (если доступен).
+   - `node witness-done/SEED/sp-tools/sp-retrieve.mjs --reindex` (если доступен).
 
 ## Формат ответа в чате
 

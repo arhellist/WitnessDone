@@ -7,8 +7,8 @@
 ## Вход
 
 - ТЗ, `01_analysis.md`, `AGENTS.md` в корне проекта (конституция)
-- `@specproof/TEMPLATES/adr.md` — **русские** заголовки (Контекст / Решение / …)
-- `@specproof/catalogs/language-policy.md`
+- `@witness-done/TEMPLATES/adr.md` — **русские** заголовки (Контекст / Решение / …)
+- `@witness-done/catalogs/language-policy.md`
 
 ## Создай
 

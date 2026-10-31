@@ -32,8 +32,8 @@ expect() {
 new_project() {
   local name="$1"
   rm -rf "$TMP/$name"
-  mkdir -p "$TMP/$name/specproof/OUTPUT"
-  cp -r "$ROOT/SEED" "$ROOT/TEMPLATES" "$ROOT/INPUT" "$ROOT/ORCHESTRATOR.md" "$ROOT/VERSION" "$TMP/$name/specproof/"
+  mkdir -p "$TMP/$name/witness-done/OUTPUT"
+  cp -r "$ROOT/SEED" "$ROOT/TEMPLATES" "$ROOT/INPUT" "$ROOT/ORCHESTRATOR.md" "$ROOT/VERSION" "$TMP/$name/witness-done/"
   cp "$ROOT/AGENTS.md" "$TMP/$name/AGENTS.md"
 }
 
@@ -43,7 +43,7 @@ start_run() {
   sed -e "s/^| MODE | greenfield \\\\| brownfield |/| MODE | $mode |/" \
       -e "s/^| last_completed_step | — |/| last_completed_step | $step |/" \
       -e "s/^| Профиль |.*/| Профиль | web-app |/" \
-      "$ROOT/TEMPLATES/manifest.md" > "$dir/specproof/OUTPUT/MANIFEST.md"
+      "$ROOT/TEMPLATES/manifest.md" > "$dir/witness-done/OUTPUT/MANIFEST.md"
 }
 
 # bind_tests_from_prompt <проект> <D> — тестовый файл, где каждая фраза объявлена тестом.
@@ -51,7 +51,7 @@ start_run() {
 # не пустой файл, а тесты с аннотацией @acceptance и утверждением.
 bind_tests_from_prompt() {
   local proj="$1" d="$2" prompt testrel
-  prompt="$(ls "$proj/specproof/OUTPUT/prompts/${d}"*.md 2>/dev/null | head -1)"
+  prompt="$(ls "$proj/witness-done/OUTPUT/prompts/${d}"*.md 2>/dev/null | head -1)"
   [[ -n "$prompt" ]] || { bad "bind_tests_from_prompt: нет промпта $d"; return 1; }
   mkdir -p "$proj/tests"
   testrel="tests/${d}_acceptance.test.ts"
@@ -96,7 +96,7 @@ fi
 # 2. Адаптеры: sync → check → drift → check 2 → sync → 0
 expect 0 "rules --sync" node "$CLI" rules --sync --root "$P"
 expect 0 "rules --check после sync" node "$CLI" rules --check --root "$P"
-[[ -f "$P/.cursorrules" && -f "$P/CLAUDE.md" && -f "$P/.cursor/rules/specproof.mdc" ]] \
+[[ -f "$P/.cursorrules" && -f "$P/CLAUDE.md" && -f "$P/.cursor/rules/witness-done.mdc" ]] \
   && ok "адаптеры созданы" || bad "адаптеры не созданы"
 echo "правка" >> "$P/AGENTS.md"
 expect 2 "rules --check ловит дрейф" node "$CLI" rules --check --root "$P"
@@ -155,8 +155,8 @@ FILL
 expect 0 "close с DEC-001" node "$CLI" close "$ID" --ref DEC-001 --root "$P4"
 grep -q 'статус | closed' "$P4/journal/intake/$ID.md" \
   && ok "запись входа закрыта" || bad "запись входа не закрыта"
-# журнал должен быть в проекте (коммитится), а не внутри specproof/
-[[ -d "$P4/journal" && ! -d "$P4/specproof/OUTPUT/intake" ]] \
+# журнал должен быть в проекте (коммитится), а не внутри witness-done/
+[[ -d "$P4/journal" && ! -d "$P4/witness-done/OUTPUT/intake" ]] \
   && ok "журнал в корне проекта: journal/" || bad "журнал не там: $(ls -d "$P4"/*/ 2>/dev/null | tr '\n' ' ')"
 node "$CLI" rules --sync --root "$P4" >/dev/null 2>&1
 expect 0 "doctor --strict после полного цикла" node "$CLI" doctor --strict --root "$P4"
@@ -167,14 +167,14 @@ new_project p5
 start_run "$P5" greenfield 04
 node "$CLI" rules --sync --root "$P5" >/dev/null 2>&1
 expect 0 "doctor на чистом прогоне" node "$CLI" doctor --root "$P5"
-mkdir -p "$P5/specproof/OUTPUT/roadmaps"
-printf '| D | Статус |\n|---|---|\n| D01 | done |\n' > "$P5/specproof/OUTPUT/roadmaps/progress.md"
+mkdir -p "$P5/witness-done/OUTPUT/roadmaps"
+printf '| D | Статус |\n|---|---|\n| D01 | done |\n' > "$P5/witness-done/OUTPUT/roadmaps/progress.md"
 expect 2 "doctor: done без evidence" node "$CLI" doctor --root "$P5"
-cp "$P5/specproof/ORCHESTRATOR.md" "$P5/specproof/OUTPUT/ORCHESTRATOR.md"
+cp "$P5/witness-done/ORCHESTRATOR.md" "$P5/witness-done/OUTPUT/ORCHESTRATOR.md"
 node "$CLI" doctor --root "$P5" > "$TMP/d.out" 2>&1
 grep -q 'должен быть один' "$TMP/d.out" \
   && ok "doctor: дубль ORCHESTRATOR.md" || bad "doctor не увидел дубль ORCHESTRATOR.md"
-rm -f "$P5/specproof/OUTPUT/ORCHESTRATOR.md"
+rm -f "$P5/witness-done/OUTPUT/ORCHESTRATOR.md"
 
 # 7. doctor: DEC-ссылка без записи в журнале
 P6="$TMP/p6"
@@ -200,11 +200,11 @@ grep -q 'DEC-001' "$P4/journal/decisions.md" && ok "индекс пересоб�
 P8="$TMP/p8"
 new_project p8
 start_run "$P8" greenfield 04
-mkdir -p "$P8/specproof/OUTPUT/intake" "$P8/specproof/OUTPUT/docs"
+mkdir -p "$P8/witness-done/OUTPUT/intake" "$P8/witness-done/OUTPUT/docs"
 printf '# INTAKE 20260101-0000-old\n\n| Поле | Значение |\n|------|----------|\n| kind | change |\n| статус | open |\n| связано | — |\n\nnext: PIPELINE/R02_propose_change.md\n' \
-  > "$P8/specproof/OUTPUT/intake/20260101-0000-old.md"
+  > "$P8/witness-done/OUTPUT/intake/20260101-0000-old.md"
 printf '# Журнал\n\n### DEC-007 — Старое решение\n\n| Поле | Значение |\n|------|----------|\n| Дата | 2026-01-01 |\n| Intake | — |\n| Статус | принято |\n\n**Решение.** так было\n' \
-  > "$P8/specproof/OUTPUT/docs/decisions.md"
+  > "$P8/witness-done/OUTPUT/docs/decisions.md"
 expect 0 "journal --migrate" node "$CLI" journal --migrate --root "$P8"
 [[ -f "$P8/journal/intake/20260101-0000-old.md" ]] && ok "intake перенесён в journal/" || bad "intake не перенесён"
 grep -q 'DEC-007' "$P8/journal/decisions.md" && ok "старое решение в индексе" || bad "DEC-007 не попал в индекс"
@@ -214,9 +214,9 @@ grep -q 'DEC-007' "$P8/journal/decisions.md" && ok "старое решение 
 P9="$TMP/p9"
 new_project p9
 start_run "$P9" greenfield 04
-mkdir -p "$P9/src/events" "$P9/specproof/OUTPUT/prompts" "$P9/specproof/OUTPUT/docs"
+mkdir -p "$P9/src/events" "$P9/witness-done/OUTPUT/prompts" "$P9/witness-done/OUTPUT/docs"
 printf 'log\n' > "$P9/src/events/log.py"
-printf '# Модули\n\n| id | вердикт |\n|---|---|\n| events | include |\n' > "$P9/specproof/OUTPUT/docs/07_module_plan.md"
+printf '# Модули\n\n| id | вердикт |\n|---|---|\n| events | include |\n' > "$P9/witness-done/OUTPUT/docs/07_module_plan.md"
 # Plan-to-Proof требует git: без него pre_ci для L1+ честно падает
 git init -q "$P9" 2>/dev/null || true
 git -C "$P9" config user.email dev@sp.test
@@ -256,7 +256,7 @@ write_prompt() { # write_prompt <сколько Axx> <conflicts_applied|none>
     echo '| ID | Фраза |'
     echo '|----|-------|'
     for i in $(seq 1 "$n"); do echo "| A01.$i | фраза $i |"; done
-  } > "$P9/specproof/OUTPUT/prompts/D01_events.md"
+  } > "$P9/witness-done/OUTPUT/prompts/D01_events.md"
   bind_tests_from_prompt "$P9" D01
 }
 
@@ -269,7 +269,7 @@ expect 0 "pre_ci: L1 с 3 Axx проходит" node "$VERIFY" --d D01 --gate pr
 # out_of_produces: посторонний файл должен попасть в акт
 printf 'x\n' > "$P9/src/extra.txt"
 node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P9" >/dev/null 2>&1
-if grep -q 'src/extra.txt' "$P9/specproof/OUTPUT/evidence/D01.json"; then
+if grep -q 'src/extra.txt' "$P9/witness-done/OUTPUT/evidence/D01.json"; then
   ok "out_of_produces заполняется из git status"
 else
   bad "out_of_produces пуст при постороннем файле"
@@ -278,32 +278,32 @@ rm -f "$P9/src/extra.txt"
 
 # conflicts: blocker из 07_conflicts.md обязан быть применён
 printf '# Конфликты\n\n| id | модуль | уровень | смягчение |\n|----|--------|---------|-----------|\n| C1 | events | blocker | очередь с подтверждением |\n' \
-  > "$P9/specproof/OUTPUT/docs/07_conflicts.md"
+  > "$P9/witness-done/OUTPUT/docs/07_conflicts.md"
 write_prompt 3 "—"
 expect 2 "pre_ci: blocker не применён → отказ" node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P9"
 write_prompt 3 "C1"
 expect 0 "pre_ci: blocker применён → проходит" node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P9"
 
 # 7d. Акт не может устареть: чужие Axx ловятся на pre_release/self-audit
-cp "$P9/specproof/OUTPUT/evidence/D01.json" "$TMP/d01.bak"
-python3 - "$P9/specproof/OUTPUT/evidence/D01.json" <<'EDIT'
+cp "$P9/witness-done/OUTPUT/evidence/D01.json" "$TMP/d01.bak"
+python3 - "$P9/witness-done/OUTPUT/evidence/D01.json" <<'EDIT'
 import json, sys
 p = sys.argv[1]
 d = json.load(open(p, encoding='utf-8'))
 d['fit']['acceptance_ids'] = ['A99.1', 'A99.2', 'A99.3']
 json.dump(d, open(p, 'w', encoding='utf-8'), ensure_ascii=False, indent=2)
 EDIT
-mkdir -p "$P9/specproof/OUTPUT/roadmaps"
-printf '# Прогресс\n\n| D | Статус |\n|---|---|\n| D01 | done |\n' > "$P9/specproof/OUTPUT/roadmaps/progress.md"
+mkdir -p "$P9/witness-done/OUTPUT/roadmaps"
+printf '# Прогресс\n\n| D | Статус |\n|---|---|\n| D01 | done |\n' > "$P9/witness-done/OUTPUT/roadmaps/progress.md"
 node "$VERIFY" --gate pre_release --root "$P9" > "$TMP/rel.out" 2>&1
 grep -q 'stale evidence' "$TMP/rel.out" && ok "pre_release: чужой акт отвергнут" || bad "pre_release не увидел чужой акт"
-cp "$TMP/d01.bak" "$P9/specproof/OUTPUT/evidence/D01.json"
+cp "$TMP/d01.bak" "$P9/witness-done/OUTPUT/evidence/D01.json"
 
 # 7e. sp-retrieve: лимит чанков не поднимается флагом и заявляется в Meta пака
 expect 1 "retrieve: --max-chunks 50 отвергнут" node "$RETRIEVE" --max-chunks 50 --reindex --root "$P9"
-mkdir -p "$P9/specproof/OUTPUT/context/packs"
+mkdir -p "$P9/witness-done/OUTPUT/context/packs"
 printf '# Pack\n\n## Meta\n\n| Поле | Значение |\n|------|----------|\n| pack_id | P01 |\n| max_chunks | 50 |\n\n## Must-hit anchors\n\n- anchor\n\n| 1 | `OUTPUT/src/events/log.py` | x | yes |\n' \
-  > "$P9/specproof/OUTPUT/context/packs/P01.md"
+  > "$P9/witness-done/OUTPUT/context/packs/P01.md"
 expect 2 "retrieve: Meta max_chunks 50 → fail" node "$RETRIEVE" --d D01 --pack P01 --validate --root "$P9"
 
 # 7f. doctor: Intake в proposal.md должен существовать
@@ -318,9 +318,9 @@ grep -q 'не найден в journal/intake' "$TMP/doc.out" && ok "doctor: би
 P10="$TMP/p10"
 new_project p10
 start_run "$P10" greenfield 04
-mkdir -p "$P10/src/events" "$P10/specproof/OUTPUT/prompts" "$P10/specproof/OUTPUT/specs"
+mkdir -p "$P10/src/events" "$P10/witness-done/OUTPUT/prompts" "$P10/witness-done/OUTPUT/specs"
 printf 'log\n' > "$P10/src/events/log.py"
-printf 'paths:\n  /events:\n    post:\n' > "$P10/specproof/OUTPUT/specs/openapi.yaml"
+printf 'paths:\n  /events:\n    post:\n' > "$P10/witness-done/OUTPUT/specs/openapi.yaml"
 {
   echo '# D01 — журнал событий'
   echo
@@ -353,18 +353,18 @@ printf 'paths:\n  /events:\n    post:\n' > "$P10/specproof/OUTPUT/specs/openapi.
   echo '| ID | Фраза |'
   echo '|----|-------|'
   for i in 1 2 3 4 5 6; do echo "| A01.$i | фраза $i |"; done
-} > "$P10/specproof/OUTPUT/prompts/D01_events.md"
+} > "$P10/witness-done/OUTPUT/prompts/D01_events.md"
 bind_tests_from_prompt "$P10" D01
 git init -q "$P10" 2>/dev/null || true
 git -C "$P10" config user.email dev@sp.test
 git -C "$P10" config user.name sp
-printf 'specproof/.sp-cache/\n' > "$P10/.gitignore"
+printf 'witness-done/.sp-cache/\n' > "$P10/.gitignore"
 git -C "$P10" add -A >/dev/null 2>&1 && git -C "$P10" commit -qm init >/dev/null 2>&1
 
 expect 2 "1.18: L2 без review отвергается" node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P10"
-grep -q '"evidence_hash"' "$P10/specproof/OUTPUT/evidence/D01.json" \
+grep -q '"evidence_hash"' "$P10/witness-done/OUTPUT/evidence/D01.json" \
   && ok "акт опечатан evidence_hash" || bad "в акте нет evidence_hash"
-grep -q '"produces_digest"' "$P10/specproof/OUTPUT/evidence/D01.json" \
+grep -q '"produces_digest"' "$P10/witness-done/OUTPUT/evidence/D01.json" \
   && ok "акт привязан к code_hash" || bad "в акте нет code_hash.produces_digest"
 expect 2 "1.18: review автором акта отвергается" \
   node "$CLI" review D01 --verdict supports --reviewer dev@sp.test --root "$P10"
@@ -376,7 +376,7 @@ expect 0 "1.18: review supports + pre_ci" \
 
 expect 0 "1.18: --verify-evidence на чистом акте" \
   node "$VERIFY" --verify-evidence OUTPUT/evidence/D01.json --root "$P10"
-python3 - "$P10/specproof/OUTPUT/evidence/D01.json" <<'TAMPER'
+python3 - "$P10/witness-done/OUTPUT/evidence/D01.json" <<'TAMPER'
 import json, sys
 p = sys.argv[1]
 d = json.load(open(p, encoding='utf-8'))
@@ -394,15 +394,15 @@ expect 2 "1.18: правка кода обесценивает review" node "$VE
 P11="$TMP/p11"
 new_project p11
 start_run "$P11" greenfield 04
-mkdir -p "$P11/src/events" "$P11/specproof/OUTPUT/prompts" "$P11/specproof/OUTPUT/docs" "$P11/specproof/OUTPUT/specs"
+mkdir -p "$P11/src/events" "$P11/witness-done/OUTPUT/prompts" "$P11/witness-done/OUTPUT/docs" "$P11/witness-done/OUTPUT/specs"
 printf 'log\n' > "$P11/src/events/log.py"
-printf 'paths:\n  /events:\n    post:\n' > "$P11/specproof/OUTPUT/specs/openapi.yaml"
-printf '| id | вердикт |\n|---|---|\n| events | include |\n' > "$P11/specproof/OUTPUT/docs/07_module_plan.md"
+printf 'paths:\n  /events:\n    post:\n' > "$P11/witness-done/OUTPUT/specs/openapi.yaml"
+printf '| id | вердикт |\n|---|---|\n| events | include |\n' > "$P11/witness-done/OUTPUT/docs/07_module_plan.md"
 git init -q "$P11" 2>/dev/null || true
 git -C "$P11" config user.email dev@sp.test
 git -C "$P11" config user.name sp
 git -C "$P11" add -A >/dev/null 2>&1 && git -C "$P11" commit -qm base >/dev/null 2>&1
-cat > "$P11/specproof/OUTPUT/docs/project-invariants.md" <<'INV'
+cat > "$P11/witness-done/OUTPUT/docs/project-invariants.md" <<'INV'
 # Инварианты
 
 ### INV-001 — Деньги в минорных единицах
@@ -453,7 +453,7 @@ write_inv_prompt() { # write_inv_prompt <level> <строка INVARIANTS> <extra
     echo '| ID | Фраза |'
     echo '|----|-------|'
     for i in 1 2 3 4 5 6; do echo "| A01.$i | фраза $i |"; done
-  } > "$P11/specproof/OUTPUT/prompts/D01_events.md"
+  } > "$P11/witness-done/OUTPUT/prompts/D01_events.md"
   bind_tests_from_prompt "$P11" D01
 }
 
@@ -471,8 +471,8 @@ write_inv_prompt L1 "- тратить только целые"
 expect 0 "1.19: L1 не попадает под L2+ инвариант" node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P11"
 write_inv_prompt L2 "- INV-999: чужое правило"
 expect 2 "1.19: висячая ссылка INV-999 → отказ" node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P11"
-sed -i.bak 's/| Waiver | — |/| Waiver | причина: legacy; до: 2020-01-01 |/' "$P11/specproof/OUTPUT/docs/project-invariants.md"
-rm -f "$P11/specproof/OUTPUT/docs/project-invariants.md.bak"
+sed -i.bak 's/| Waiver | — |/| Waiver | причина: legacy; до: 2020-01-01 |/' "$P11/witness-done/OUTPUT/docs/project-invariants.md"
+rm -f "$P11/witness-done/OUTPUT/docs/project-invariants.md.bak"
 write_inv_prompt L2 "- тратить только целые"
 expect 2 "1.19: просроченный waiver → отказ" node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P11"
 write_inv_prompt L2 "- тратить только целые" "каталог к задаче не относится"
@@ -482,23 +482,23 @@ pass_inv "1.19: invariants_skip с причиной → проходит"
 P12="$TMP/p12"
 new_project p12
 start_run "$P12" greenfield 04
-mkdir -p "$P12/specproof/OUTPUT/roadmaps" "$P12/specproof/OUTPUT/evidence"
-printf '| D | Статус |\n|---|---|\n| D01 | done |\n' > "$P12/specproof/OUTPUT/roadmaps/progress.md"
+mkdir -p "$P12/witness-done/OUTPUT/roadmaps" "$P12/witness-done/OUTPUT/evidence"
+printf '| D | Статус |\n|---|---|\n| D01 | done |\n' > "$P12/witness-done/OUTPUT/roadmaps/progress.md"
 # Акт пишется через seal: с v1.24 self-audit проверяет печать акта, а не только tax_pass.
 node --input-type=module -e "
 import fs from 'node:fs';
 import { seal } from '$ROOT/SEED/sp-tools/evidence-lib.mjs';
 const data = { d: 'D01', level: 'L0', gate: 'pre_ci', tax_pass: true, fit: { acceptance_ids: [] }, timestamp: '2026-01-01T00:00:00Z' };
-fs.writeFileSync('$P12/specproof/OUTPUT/evidence/D01.json', JSON.stringify(seal('$P12', data), null, 2));
+fs.writeFileSync('$P12/witness-done/OUTPUT/evidence/D01.json', JSON.stringify(seal('$P12', data), null, 2));
 "
 SP_LITE=1 node "$CLI" status --root "$P12" > "$TMP/lite.out" 2>&1
 grep -q 'Режим: LITE' "$TMP/lite.out" && ok "1.19: status печатает LITE по SP_LITE=1" || bad "status без LITE: $(cat "$TMP/lite.out")"
-sed -i.bak 's/^| Режим прогона | full |/| Режим прогона | lite |/' "$P12/specproof/OUTPUT/MANIFEST.md"
-rm -f "$P12/specproof/OUTPUT/MANIFEST.md.bak"
-grep -q 'Режим прогона | lite' "$P12/specproof/OUTPUT/MANIFEST.md" && ok "1.19: MANIFEST знает режим lite" || bad "MANIFEST без режима lite"
+sed -i.bak 's/^| Режим прогона | full |/| Режим прогона | lite |/' "$P12/witness-done/OUTPUT/MANIFEST.md"
+rm -f "$P12/witness-done/OUTPUT/MANIFEST.md.bak"
+grep -q 'Режим прогона | lite' "$P12/witness-done/OUTPUT/MANIFEST.md" && ok "1.19: MANIFEST знает режим lite" || bad "MANIFEST без режима lite"
 expect 0 "1.19: lite self-audit без coverage-matrix" node "$VERIFY" --gate self-audit --root "$P12"
-sed -i.bak 's/^| Режим прогона | lite |/| Режим прогона | full |/' "$P12/specproof/OUTPUT/MANIFEST.md"
-rm -f "$P12/specproof/OUTPUT/MANIFEST.md.bak"
+sed -i.bak 's/^| Режим прогона | lite |/| Режим прогона | full |/' "$P12/witness-done/OUTPUT/MANIFEST.md"
+rm -f "$P12/witness-done/OUTPUT/MANIFEST.md.bak"
 expect 2 "1.19: full self-audit требует coverage-matrix" node "$VERIFY" --gate self-audit --root "$P12"
 
 node "$CLI" intake "Добавь кнопку экспорта" --kind task --root "$P12" > "$TMP/packet.out" 2>&1
@@ -521,13 +521,13 @@ FILLPACKET
 expect 0 "1.19: заполненный spec-packet проходит" node "$VERIFY" --gate spec-packet --intake "$PID" --root "$P12"
 expect 0 "1.19: journal --check видит пару intake+packet" node "$CLI" journal --check --root "$P12"
 expect 0 "1.19: feedback --lite" node "$CLI" feedback --lite --root "$P12"
-[[ -f "$P12/specproof/OUTPUT/docs/feedback-lite.md" ]] && ok "1.19: feedback-lite.md записан" || bad "feedback-lite.md не создан"
+[[ -f "$P12/witness-done/OUTPUT/docs/feedback-lite.md" ]] && ok "1.19: feedback-lite.md записан" || bad "feedback-lite.md не создан"
 
 # 7j. 1.20: Plan-to-Proof — proof_debt входит в tax_pass
 P13="$TMP/p13"
 new_project p13
 start_run "$P13" greenfield 04
-mkdir -p "$P13/src/events" "$P13/specproof/OUTPUT/prompts"
+mkdir -p "$P13/src/events" "$P13/witness-done/OUTPUT/prompts"
 printf 'log\n' > "$P13/src/events/log.py"
 in_plan_prompt() { # in_plan_prompt <PRODUCES|многострочно>
   {
@@ -564,14 +564,14 @@ in_plan_prompt() { # in_plan_prompt <PRODUCES|многострочно>
     echo '| A01.1 | раз |'
     echo '| A01.2 | два |'
     echo '| A01.3 | три |'
-  } > "$P13/specproof/OUTPUT/prompts/D01_events.md"
+  } > "$P13/witness-done/OUTPUT/prompts/D01_events.md"
   bind_tests_from_prompt "$P13" D01
 }
 in_plan_prompt '- src/events/log.py'
 expect 2 "1.20: без git pre_ci для L1 падает, а не молчит" node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P13"
-grep -q 'plan:' "$P13/specproof/OUTPUT/evidence/D01.json" && ok "1.20: причина в акте (plan.note)" || bad "в акте нет plan.note"
+grep -q 'plan:' "$P13/witness-done/OUTPUT/evidence/D01.json" && ok "1.20: причина в акте (plan.note)" || bad "в акте нет plan.note"
 # акт, написанный вне git, не должен попасть в базовый коммит: иначе он «изменён после коммита»
-rm -rf "$P13/specproof/OUTPUT/evidence"
+rm -rf "$P13/witness-done/OUTPUT/evidence"
 
 git init -q "$P13" 2>/dev/null || true
 git -C "$P13" config user.email dev@sp.test
@@ -595,16 +595,16 @@ expect 0 "1.20: коммит акта не обнуляет печать (git-я
 rm -rf "$P13/src/events/sub"
 printf 'q\n' > "$P13/src/events/sub_extra.py"
 expect 0 "1.20: файл под glob не попадает в out_of_produces" \
-  bash -c "node '$VERIFY' --d D01 --gate pre_ci --skip-commands --root '$P13' >/dev/null 2>&1; python3 -c \"import json,sys; d=json.load(open('$P13/specproof/OUTPUT/evidence/D01.json')); sys.exit(0 if d['fit']['out_of_produces']==[] else 1)\""
+  bash -c "node '$VERIFY' --d D01 --gate pre_ci --skip-commands --root '$P13' >/dev/null 2>&1; python3 -c \"import json,sys; d=json.load(open('$P13/witness-done/OUTPUT/evidence/D01.json')); sys.exit(0 if d['fit']['out_of_produces']==[] else 1)\""
 rm -f "$P13/src/events/sub_extra.py"
 
 # 7k. 1.20: runtime trace для L3 — форма и целостность
 P14="$TMP/p14"
 new_project p14
 start_run "$P14" greenfield 04
-mkdir -p "$P14/src/pay" "$P14/specproof/OUTPUT/prompts" "$P14/specproof/OUTPUT/specs" "$P14/specproof/OUTPUT/evidence"
+mkdir -p "$P14/src/pay" "$P14/witness-done/OUTPUT/prompts" "$P14/witness-done/OUTPUT/specs" "$P14/witness-done/OUTPUT/evidence"
 printf 'pay\n' > "$P14/src/pay/charge.py"
-printf 'paths:\n  /charge:\n    post:\n' > "$P14/specproof/OUTPUT/specs/openapi.yaml"
+printf 'paths:\n  /charge:\n    post:\n' > "$P14/witness-done/OUTPUT/specs/openapi.yaml"
 {
   echo '# D01 — оплата'
   echo
@@ -640,7 +640,7 @@ printf 'paths:\n  /charge:\n    post:\n' > "$P14/specproof/OUTPUT/specs/openapi.
   echo '| ID | Фраза |'
   echo '|----|-------|'
   for i in 1 2 3 4 5 6; do echo "| A01.$i | фраза $i |"; done
-} > "$P14/specproof/OUTPUT/prompts/D01_pay.md"
+} > "$P14/witness-done/OUTPUT/prompts/D01_pay.md"
 bind_tests_from_prompt "$P14" D01
 git init -q "$P14" 2>/dev/null || true
 git -C "$P14" config user.email dev@sp.test
@@ -648,25 +648,25 @@ git -C "$P14" config user.name sp
 git -C "$P14" add -A >/dev/null 2>&1 && git -C "$P14" commit -qm base >/dev/null 2>&1
 
 expect 2 "1.20: L3 без trace отвергается" node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P14"
-printf '{"status":"ok"}' > "$P14/specproof/OUTPUT/evidence/api.json"
-printf 'log line\n' > "$P14/specproof/OUTPUT/evidence/console.txt"
+printf '{"status":"ok"}' > "$P14/witness-done/OUTPUT/evidence/api.json"
+printf 'log line\n' > "$P14/witness-done/OUTPUT/evidence/console.txt"
 # Трейс привязывается к коду: commit и code_hash обязательны (DEC-019)
 HEAD14="$(git -C "$P14" rev-parse HEAD)"
 DIGEST14="$(node -e "
 import('$ROOT/SEED/sp-tools/evidence-lib.mjs').then(m => {
   const fs = require('node:fs');
-  const ev = JSON.parse(fs.readFileSync('$P14/specproof/OUTPUT/evidence/D01.json', 'utf8'));
+  const ev = JSON.parse(fs.readFileSync('$P14/witness-done/OUTPUT/evidence/D01.json', 'utf8'));
   const h = m.codeHash('$P14', ev.fit.produces);
   process.stdout.write(h.produces_digest);
 });")"
-cat > "$P14/specproof/OUTPUT/evidence/D01.trace.json" <<TRACE
+cat > "$P14/witness-done/OUTPUT/evidence/D01.trace.json" <<TRACE
 {"d":"D01","captured_at":"2026-10-28T12:00:00Z","source":"preview run","commit":"$HEAD14","code_hash":{"produces_digest":"$DIGEST14"},"entries":[{"type":"api_response","ref":"evidence/api.json"},{"type":"console_log","ref":"evidence/console.txt"}]}
 TRACE
 node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P14" >/dev/null 2>&1
 node "$CLI" review D01 --verdict supports --reviewer anna@sp.test --root "$P14" >/dev/null 2>&1
 expect 0 "1.20: L3 с валидным trace и review проходит" node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P14"
 # Трейс без привязки к коммиту — не доказательство: форму проверять недостаточно
-python3 - "$P14/specproof/OUTPUT/evidence/D01.trace.json" "$HEAD14" <<'TRACEUNBIND'
+python3 - "$P14/witness-done/OUTPUT/evidence/D01.trace.json" "$HEAD14" <<'TRACEUNBIND'
 import json, sys
 p, head = sys.argv[1], sys.argv[2]
 d = json.load(open(p, encoding='utf-8'))
@@ -675,14 +675,14 @@ json.dump(d, open(p, 'w', encoding='utf-8'), indent=2)
 TRACEUNBIND
 node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P14" > "$TMP/unbind.out" 2>&1
 grep -q 'трейс от другого кода' "$TMP/unbind.out" && ok "1.20: трейс от другого коммита отвергается" || bad "commit в трейсе не проверяется"
-python3 - "$P14/specproof/OUTPUT/evidence/D01.trace.json" "$HEAD14" <<'TRACEREBIND'
+python3 - "$P14/witness-done/OUTPUT/evidence/D01.trace.json" "$HEAD14" <<'TRACEREBIND'
 import json, sys
 p, head = sys.argv[1], sys.argv[2]
 d = json.load(open(p, encoding='utf-8'))
 d['commit'] = head
 json.dump(d, open(p, 'w', encoding='utf-8'), indent=2)
 TRACEREBIND
-python3 - "$P14/specproof/OUTPUT/evidence/D01.trace.json" <<'TRACENOHASH'
+python3 - "$P14/witness-done/OUTPUT/evidence/D01.trace.json" <<'TRACENOHASH'
 import json, sys
 p = sys.argv[1]
 d = json.load(open(p, encoding='utf-8'))
@@ -691,7 +691,7 @@ json.dump(d, open(p, 'w', encoding='utf-8'), indent=2)
 TRACENOHASH
 node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P14" > "$TMP/nohash.out" 2>&1
 grep -q 'code_hash отсутствует' "$TMP/nohash.out" && ok "1.20: трейс без code_hash отвергается" || bad "code_hash в трейсе не требуется"
-python3 - "$P14/specproof/OUTPUT/evidence/D01.trace.json" "$DIGEST14" <<'TRACEREHASH'
+python3 - "$P14/witness-done/OUTPUT/evidence/D01.trace.json" "$DIGEST14" <<'TRACEREHASH'
 import json, sys
 p, digest = sys.argv[1], sys.argv[2]
 d = json.load(open(p, encoding='utf-8'))
@@ -702,7 +702,7 @@ node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P14" >/dev/null 2>
 node "$CLI" review D01 --verdict supports --reviewer anna@sp.test --root "$P14" >/dev/null 2>&1
 expect 0 "1.20: трейс с commit и code_hash принят" node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P14"
 expect 0 "1.20: --verify-evidence видит trace_hash" node "$VERIFY" --verify-evidence OUTPUT/evidence/D01.json --root "$P14"
-python3 - "$P14/specproof/OUTPUT/evidence/D01.trace.json" <<'TRACETAMPER'
+python3 - "$P14/witness-done/OUTPUT/evidence/D01.trace.json" <<'TRACETAMPER'
 import json, sys
 p = sys.argv[1]
 d = json.load(open(p, encoding='utf-8'))
@@ -715,7 +715,7 @@ expect 2 "1.20: трейс подменён после приёмки — акт
 P15="$TMP/p15"
 new_project p15
 start_run "$P15" greenfield 04
-mkdir -p "$P15/src" "$P15/tests" "$P15/specproof/OUTPUT/prompts" "$P15/specproof/OUTPUT/roadmaps/progress.d"
+mkdir -p "$P15/src" "$P15/tests" "$P15/witness-done/OUTPUT/prompts" "$P15/witness-done/OUTPUT/roadmaps/progress.d"
 printf 'v1\n' > "$P15/src/a.py"
 printf 'A01.1 A01.2 A01.3\n' > "$P15/tests/test_a.py"
 {
@@ -752,7 +752,7 @@ printf 'A01.1 A01.2 A01.3\n' > "$P15/tests/test_a.py"
   echo '| A01.1 | раз |'
   echo '| A01.2 | два |'
   echo '| A01.3 | три |'
-} > "$P15/specproof/OUTPUT/prompts/D01_a.md"
+} > "$P15/witness-done/OUTPUT/prompts/D01_a.md"
 bind_tests_from_prompt "$P15" D01
 git init -q "$P15" 2>/dev/null || true
 git -C "$P15" config user.email dev@sp.test
@@ -761,7 +761,7 @@ git -C "$P15" add -A >/dev/null 2>&1 && git -C "$P15" commit -qm base >/dev/null
 printf 'v2\n' > "$P15/src/a.py"
 expect 0 "1.21: pre_ci для будущего акта" node "$VERIFY" --d D01 --gate pre_ci --skip-commands --root "$P15"
 
-cat > "$P15/specproof/OUTPUT/roadmaps/progress.md" <<'PROG'
+cat > "$P15/witness-done/OUTPUT/roadmaps/progress.md" <<'PROG'
 # Progress
 
 | D | Кратко | split_group | Статус | evidence_ref | Доказательства | Обновлено | Заметки |
@@ -772,7 +772,7 @@ cat > "$P15/specproof/OUTPUT/roadmaps/progress.md" <<'PROG'
 
 Итого: 0 done.
 PROG
-cat > "$P15/specproof/OUTPUT/roadmaps/progress.d/D01.md" <<'FRAG'
+cat > "$P15/witness-done/OUTPUT/roadmaps/progress.d/D01.md" <<'FRAG'
 # D01
 
 | Поле | Значение |
@@ -787,7 +787,7 @@ expect 2 "1.21: progress --check видит расхождение" node "$CLI" 
 expect 0 "1.21: progress --merge собирает progress.md" node "$CLI" progress --merge --root "$P15"
 expect 0 "1.21: progress --check после сборки" node "$CLI" progress --check --root "$P15"
 # фантомный done без фрагмента внутри таблицы — расхождение, а не «ручная правка»
-python3 - "$P15/specproof/OUTPUT/roadmaps/progress.md" <<'PHANTOM'
+python3 - "$P15/witness-done/OUTPUT/roadmaps/progress.md" <<'PHANTOM'
 import sys
 p = sys.argv[1]
 lines = open(p, encoding='utf-8').read().split('\n')
@@ -798,19 +798,19 @@ PHANTOM
 expect 2 "1.21: progress --check ловит строку без фрагмента" node "$CLI" progress --check --root "$P15"
 node "$CLI" progress --merge --root "$P15" >/dev/null 2>&1
 expect 0 "1.21: merge убирает фантомную строку" node "$CLI" progress --check --root "$P15"
-cp "$P15/specproof/OUTPUT/roadmaps/progress.d/D01.md" "$P15/specproof/OUTPUT/roadmaps/progress.d/D01-dup.md"
+cp "$P15/witness-done/OUTPUT/roadmaps/progress.d/D01.md" "$P15/witness-done/OUTPUT/roadmaps/progress.d/D01-dup.md"
 expect 2 "1.21: дубль D в фрагментах отвергается" node "$CLI" progress --merge --root "$P15"
-rm -f "$P15/specproof/OUTPUT/roadmaps/progress.d/D01-dup.md"
+rm -f "$P15/witness-done/OUTPUT/roadmaps/progress.d/D01-dup.md"
 
 node "$CLI" rules --sync --root "$P15" >/dev/null 2>&1
 expect 0 "1.21: doctor --team на согласованном прогрессе" node "$CLI" doctor --team --root "$P15"
-sed -i.bak 's/| evidence\/D01.json |/| — |/' "$P15/specproof/OUTPUT/roadmaps/progress.d/D01.md"
-rm -f "$P15/specproof/OUTPUT/roadmaps/progress.d/D01.md.bak"
+sed -i.bak 's/| evidence\/D01.json |/| — |/' "$P15/witness-done/OUTPUT/roadmaps/progress.d/D01.md"
+rm -f "$P15/witness-done/OUTPUT/roadmaps/progress.d/D01.md.bak"
 node "$CLI" progress --merge --root "$P15" >/dev/null 2>&1
 node "$CLI" doctor --team --root "$P15" > "$TMP/team.out" 2>&1
 grep -q 'done без evidence_ref' "$TMP/team.out" && ok "1.21: doctor --team требует evidence_ref" || bad "doctor --team не увидел отсутствие evidence_ref"
-cp "$P15/specproof/OUTPUT/roadmaps/progress.d/D01.md" "$TMP/frag.bak"
-python3 - "$P15/specproof/OUTPUT/roadmaps/progress.d/D01.md" <<'REFBACK'
+cp "$P15/witness-done/OUTPUT/roadmaps/progress.d/D01.md" "$TMP/frag.bak"
+python3 - "$P15/witness-done/OUTPUT/roadmaps/progress.d/D01.md" <<'REFBACK'
 import sys
 p = sys.argv[1]
 t = open(p, encoding='utf-8').read().replace('| — | — | 2026-10-28 |', '| evidence/D01.json | — | 2026-10-28 |')
@@ -855,19 +855,19 @@ printf '{"approved_by":"anna@sp.test","role":"cto","timestamp":"2026-10-28T10:00
 expect 0 "1.21: approval от другого человека пропускает L3" node "$VERIFY" --change add-pay --gate change --skip-commands --root "$P15"
 
 # coverage_confidence в RELEASE.json и feedback.md
-printf '| Requirement | D |\n|---|---|\n| R1 | D01 |\n' > "$P15/specproof/OUTPUT/roadmaps/coverage-matrix.md"
+printf '| Requirement | D |\n|---|---|\n| R1 | D01 |\n' > "$P15/witness-done/OUTPUT/roadmaps/coverage-matrix.md"
 # Акт, снятый с --skip-commands, релиз не принимает: пересоздаём его с реально выполненными
 # командами (lint/typecheck/test = true), иначе проверяем не релиз, а shortcut.
-mkdir -p "$P15/specproof/OUTPUT/tooling"
-printf '# Verify commands\n\n- lint: `true`\n- typecheck: `true`\n- test: `true`\n' > "$P15/specproof/OUTPUT/tooling/verify-commands.md"
+mkdir -p "$P15/witness-done/OUTPUT/tooling"
+printf '# Verify commands\n\n- lint: `true`\n- typecheck: `true`\n- test: `true`\n' > "$P15/witness-done/OUTPUT/tooling/verify-commands.md"
 node "$VERIFY" --d D01 --gate pre_ci --root "$P15" >/dev/null 2>&1
 # Контур 3: релиз с runtime-кодом требует смоук-прогон (DEC-021) и метки Axx в нём (DEC-020)
 expect 2 "1.21: pre_release без product-smoke не проходит" node "$VERIFY" --gate pre_release --root "$P15"
-mkdir -p "$P15/specproof/OUTPUT/docs/runbooks" "$P15/scripts/smoke"
-printf '# Product smoke\n\nA1 health: GET /health → 200\n' > "$P15/specproof/OUTPUT/docs/runbooks/product-smoke.md"
+mkdir -p "$P15/witness-done/OUTPUT/docs/runbooks" "$P15/scripts/smoke"
+printf '# Product smoke\n\nA1 health: GET /health → 200\n' > "$P15/witness-done/OUTPUT/docs/runbooks/product-smoke.md"
 printf '#!/usr/bin/env bash\nset -e\necho "A01.1: A=200"\n' > "$P15/scripts/smoke/product-smoke.sh"
 expect 0 "1.21: product-smoke с меткой Axx проходит" node "$VERIFY" --gate product-smoke --skip-commands --root "$P15"
-python3 - "$P15/specproof/OUTPUT/evidence/RELEASE-product-smoke.json" <<'SMOKEACT'
+python3 - "$P15/witness-done/OUTPUT/evidence/RELEASE-product-smoke.json" <<'SMOKEACT'
 import json, sys
 d = json.load(open(sys.argv[1], encoding='utf-8'))
 assert d['runtime']['labels'] == ['A01.1'], d.get('runtime')
@@ -881,7 +881,7 @@ printf '#!/usr/bin/env bash\nset -e\necho "A01.1: A=200"\n' > "$P15/scripts/smok
 # Смоук исполняется по-настоящему: акт без исполнения (--skip-commands) релиз не принимает.
 node "$VERIFY" --gate product-smoke --root "$P15" >/dev/null 2>&1
 expect 0 "1.21: pre_release проходит на согласованном проекте" node "$VERIFY" --gate pre_release --root "$P15"
-python3 - "$P15/specproof/OUTPUT/evidence/RELEASE.json" <<'CONF'
+python3 - "$P15/witness-done/OUTPUT/evidence/RELEASE.json" <<'CONF'
 import json, sys
 d = json.load(open(sys.argv[1], encoding='utf-8'))
 c = d.get('coverage_confidence') or {}
@@ -893,8 +893,8 @@ CONF
 [[ $? -eq 0 ]] && ok "1.21: coverage_confidence в RELEASE.json (полное покрытие = 1)" || bad "coverage_confidence неверен"
 
 # подмена акта после приёмки: pre_release обязан её увидеть, а не «не найти акт»
-cp "$P15/specproof/OUTPUT/evidence/D01.json" "$TMP/d01.bak"
-python3 - "$P15/specproof/OUTPUT/evidence/D01.json" <<'EVTAMPER'
+cp "$P15/witness-done/OUTPUT/evidence/D01.json" "$TMP/d01.bak"
+python3 - "$P15/witness-done/OUTPUT/evidence/D01.json" <<'EVTAMPER'
 import sys
 p = sys.argv[1]
 t = open(p, encoding='utf-8').read()
@@ -904,16 +904,16 @@ node "$VERIFY" --gate pre_release --root "$P15" > "$TMP/tamper.out" 2>&1
 grep -q 'evidence_hash не совпадает' "$TMP/tamper.out" \
   && ok "1.21: pre_release ловит подмену акта" || bad "pre_release не увидел подмену: $(grep -o 'акт не найден[^\"]*' "$TMP/tamper.out" | head -1)"
 expect 2 "1.21: испорченный акт не проходит pre_release" node "$VERIFY" --gate pre_release --root "$P15"
-cp "$TMP/d01.bak" "$P15/specproof/OUTPUT/evidence/D01.json"
+cp "$TMP/d01.bak" "$P15/witness-done/OUTPUT/evidence/D01.json"
 expect 0 "1.21: sp feedback" node "$CLI" feedback --root "$P15"
-grep -q 'coverage_confidence' "$P15/specproof/OUTPUT/docs/feedback.md" \
+grep -q 'coverage_confidence' "$P15/witness-done/OUTPUT/docs/feedback.md" \
   && ok "1.21: число дублируется в feedback.md" || bad "feedback.md без coverage_confidence"
 
 # 7m. 1.26: ярлыки неполноты — гейт d-prompt-quality ловит MVP/PoC/v1-как-статус
 P25="$TMP/p25"
 new_project p25
 start_run "$P25" greenfield 04
-mkdir -p "$P25/src/events" "$P25/specproof/OUTPUT/prompts"
+mkdir -p "$P25/src/events" "$P25/witness-done/OUTPUT/prompts"
 printf 'log\n' > "$P25/src/events/log.py"
 
 write_d25() { # write_d25 <дополнительная строка | ->
@@ -972,7 +972,7 @@ write_d25() { # write_d25 <дополнительная строка | ->
     echo '| A01.1 | событие записано до уведомления |'
     echo '| A01.2 | seq не переиспользуется после рестарта |'
     echo '| A01.3 | сбой записи возвращает ошибку |'
-  } > "$P25/specproof/OUTPUT/prompts/D01_events.md"
+  } > "$P25/witness-done/OUTPUT/prompts/D01_events.md"
 }
 
 write_d25 "-"
@@ -1009,21 +1009,21 @@ if command -v git >/dev/null 2>&1; then
   else
     bad "update не напечатал шаги: $(cat "$TMP/u.out")"
   fi
-  if [[ -f "$P7/specproof/.sp-cache/update.json" ]] && grep -q '1.99.0' "$P7/specproof/.sp-cache/update.json"; then
+  if [[ -f "$P7/witness-done/.sp-cache/update.json" ]] && grep -q '1.99.0' "$P7/witness-done/.sp-cache/update.json"; then
     ok "update пишет кэш .sp-cache/update.json"
   else
     bad "update не записал кэш"
   fi
   expect 2 "update: повторный вызов из кэша" node "$CLI" update --root "$P7"
   node "$CLI" status --root "$P7" > "$TMP/st.out" 2>&1
-  LV="$(cat "$P7/specproof/VERSION")"
+  LV="$(cat "$P7/witness-done/VERSION")"
   grep -q "Версия фабрики: $LV (обновление: $LV → 1.99.0" "$TMP/st.out" \
     && ok "status показывает версию и обновление" || bad "status без строки обновления: $(grep -i версия "$TMP/st.out")"
   # ложное «актуально» недопустимо: локальная версия выше удалённой тоже current
-  echo 2.0.0 > "$P7/specproof/VERSION"
+  echo 2.0.0 > "$P7/witness-done/VERSION"
   expect 0 "update: локально новее удалённого" node "$CLI" update --root "$P7" --no-cache
-  rm -rf "$P7/specproof/.sp-cache"
-  expect 3 "update: нет конфига" bash -c "rm -f '$P7/specproof/SEED/update.json' && node '$CLI' update --root '$P7' --no-cache"
+  rm -rf "$P7/witness-done/.sp-cache"
+  expect 3 "update: нет конфига" bash -c "rm -f '$P7/witness-done/SEED/update.json' && node '$CLI' update --root '$P7' --no-cache"
 fi
 
 # 9. doctor в корне канона: проверяется канон, а не прогон
@@ -1045,9 +1045,9 @@ expect 2 "canon: rules --check ловит рассинхрон" bash -c "printf 
 P16="$TMP/p16"
 new_project p16
 start_run "$P16" greenfield 08
-mkdir -p "$P16/specproof/OUTPUT/evidence" "$P16/specproof/OUTPUT/runtime" "$P16/src"
+mkdir -p "$P16/witness-done/OUTPUT/evidence" "$P16/witness-done/OUTPUT/runtime" "$P16/src"
 printf 'v1\n' > "$P16/src/a.py"
-cat > "$P16/specproof/OUTPUT/evidence/D03.json" <<'ACT16'
+cat > "$P16/witness-done/OUTPUT/evidence/D03.json" <<'ACT16'
 {"d":"D03","gate":"pre_ci","level":"L1","tax_pass":true,"fit":{"acceptance_ids":["A03.1"],"produces":["src/a.py"]}}
 ACT16
 git -C "$P16" init -q
@@ -1055,7 +1055,7 @@ git -C "$P16" -c user.email=sp@test -c user.name=sp add -A
 git -C "$P16" -c user.email=sp@test -c user.name=sp commit -qm init
 
 write_plan() {
-  cat > "$P16/specproof/OUTPUT/runtime/runtime-plan.json"
+  cat > "$P16/witness-done/OUTPUT/runtime/runtime-plan.json"
 }
 write_plan <<'PLAN16'
 {
@@ -1072,7 +1072,7 @@ expect 0 "1.23: --gate runtime-plan (статика) проходит" node "$VE
 EXEC16="$TMP/rt-exec.json"
 node "$VERIFY" --gate runtime --root "$P16" > "$EXEC16" 2>&1
 [[ $? -eq 0 ]] && ok "1.23: --gate runtime исполняет план (exit 0)" || bad "исполнение плана провалилось: $(head -c 400 "$EXEC16")"
-python3 - "$P16/specproof/OUTPUT/evidence/RELEASE-runtime-verify.json" <<'ACTRT'
+python3 - "$P16/witness-done/OUTPUT/evidence/RELEASE-runtime-verify.json" <<'ACTRT'
 import json, sys
 d = json.load(open(sys.argv[1], encoding='utf-8'))
 assert d['tax_pass'] is True, d
@@ -1086,7 +1086,7 @@ ACTRT
 python3 - "$P16" <<'AUTOTRACE'
 import json, subprocess, sys
 root = sys.argv[1]
-t = json.load(open(root + '/specproof/OUTPUT/evidence/D03.trace.json', encoding='utf-8'))
+t = json.load(open(root + '/witness-done/OUTPUT/evidence/D03.trace.json', encoding='utf-8'))
 head = subprocess.run(['git', '-C', root, 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
 assert t['d'] == 'D03', t
 assert t['commit'] == head, (t['commit'], head)
@@ -1155,7 +1155,7 @@ write_plan <<'PLANOK'
   "verify": [{ "acceptance": "A03.1", "cmd": "true" }]
 }
 PLANOK
-rm -f "$P16/specproof/OUTPUT/evidence/RELEASE-runtime-verify.json"
+rm -f "$P16/witness-done/OUTPUT/evidence/RELEASE-runtime-verify.json"
 node "$VERIFY" --gate pre_release --root "$P16" > "$TMP/prt.out" 2>&1
 grep -q 'план есть, верификация в рантайме не прогонялась' "$TMP/prt.out" && ok "1.23: pre_release требует исполненный план" || bad "pre_release пропустил неисполненный план"
 
@@ -1163,12 +1163,12 @@ grep -q 'план есть, верификация в рантайме не пр
 P24="$TMP/p24"
 new_project p24
 start_run "$P24" greenfield 10b
-mkdir -p "$P24/src" "$P24/tests" "$P24/scripts/smoke" "$P24/specproof/OUTPUT/prompts" \
-  "$P24/specproof/OUTPUT/specs" "$P24/specproof/OUTPUT/roadmaps" "$P24/specproof/OUTPUT/tooling" \
-  "$P24/specproof/OUTPUT/docs/runbooks"
+mkdir -p "$P24/src" "$P24/tests" "$P24/scripts/smoke" "$P24/witness-done/OUTPUT/prompts" \
+  "$P24/witness-done/OUTPUT/specs" "$P24/witness-done/OUTPUT/roadmaps" "$P24/witness-done/OUTPUT/tooling" \
+  "$P24/witness-done/OUTPUT/docs/runbooks"
 printf 'export const a = 1;\n' > "$P24/src/index.ts"
 printf 'A01.1 A01.2 A01.3 A01.4 A01.5 A01.6\n' > "$P24/tests/a.test.ts"
-cat > "$P24/specproof/OUTPUT/specs/openapi.yaml" <<'OA'
+cat > "$P24/witness-done/OUTPUT/specs/openapi.yaml" <<'OA'
 openapi: 3.0.0
 paths:
   /orders:
@@ -1179,8 +1179,8 @@ paths:
       summary: list
 OA
 # Три команды через бэктики на разных строках: до 1.24 загрузчик склеивал строки и исполнял мусор.
-printf '# Verify\n\n- lint: `true`\n- typecheck: `true`\n- test: `true`\n' > "$P24/specproof/OUTPUT/tooling/verify-commands.md"
-cat > "$P24/specproof/OUTPUT/prompts/D01.md" <<'P24D01'
+printf '# Verify\n\n- lint: `true`\n- typecheck: `true`\n- test: `true`\n' > "$P24/witness-done/OUTPUT/tooling/verify-commands.md"
+cat > "$P24/witness-done/OUTPUT/prompts/D01.md" <<'P24D01'
 # D01 — заказы
 
 ## FIT_CHECKS
@@ -1217,23 +1217,23 @@ node "$CLI" review D01 --verdict supports --reviewer anna@sp.test --root "$P24" 
 expect 0 "1.24: glob **/ совпадает с файлом в корне каталога" node "$VERIFY" --d D01 --gate pre_ci --root "$P24"
 node --input-type=module -e "
 import fs from 'node:fs';
-const j = JSON.parse(fs.readFileSync('$P24/specproof/OUTPUT/evidence/D01.json', 'utf8'));
+const j = JSON.parse(fs.readFileSync('$P24/witness-done/OUTPUT/evidence/D01.json', 'utf8'));
 if (!j.code_hash.produces.includes('src/index.ts')) { console.error('нет src/index.ts в code_hash'); process.exit(1); }
 if (j.commands.map((c) => c.cmd).join(',') !== 'true,true,true') { console.error('команды: ' + JSON.stringify(j.commands)); process.exit(1); }
 " >/dev/null 2>&1 && ok "1.24: code_hash видит файл из glob, verify-commands загружен по строкам" \
   || bad "glob не покрыл файл или verify-commands склеил строки"
 
 # метод и путь сверяются вместе: GET /orders нет в контракте (есть POST /orders и GET /users)
-sed -i.bak 's/| app_contracts | POST \/orders |/| app_contracts | GET \/orders |/' "$P24/specproof/OUTPUT/prompts/D01.md"
-rm -f "$P24/specproof/OUTPUT/prompts/D01.md.bak"
+sed -i.bak 's/| app_contracts | POST \/orders |/| app_contracts | GET \/orders |/' "$P24/witness-done/OUTPUT/prompts/D01.md"
+rm -f "$P24/witness-done/OUTPUT/prompts/D01.md.bak"
 node "$VERIFY" --d D01 --gate pre_ci --root "$P24" > "$TMP/p24api.out" 2>&1
 grep -q 'контракт не содержит GET /orders' "$TMP/p24api.out" && ok "1.24: app_contracts сверяет пару метод-путь" || bad "чужой метод прошёл"
-sed -i.bak 's/| app_contracts | GET \/orders |/| app_contracts | POST \/orders |/' "$P24/specproof/OUTPUT/prompts/D01.md"
-rm -f "$P24/specproof/OUTPUT/prompts/D01.md.bak"
+sed -i.bak 's/| app_contracts | GET \/orders |/| app_contracts | POST \/orders |/' "$P24/witness-done/OUTPUT/prompts/D01.md"
+rm -f "$P24/witness-done/OUTPUT/prompts/D01.md.bak"
 
 # review без code_hash — не привязан к коду
-cp "$P24/specproof/OUTPUT/evidence/D01.review.json" "$TMP/rev.bak"
-python3 - "$P24/specproof/OUTPUT/evidence/D01.review.json" <<'NOREVHASH'
+cp "$P24/witness-done/OUTPUT/evidence/D01.review.json" "$TMP/rev.bak"
+python3 - "$P24/witness-done/OUTPUT/evidence/D01.review.json" <<'NOREVHASH'
 import json, sys
 p = sys.argv[1]
 d = json.load(open(p, encoding='utf-8'))
@@ -1242,7 +1242,7 @@ json.dump(d, open(p, 'w', encoding='utf-8'), indent=2)
 NOREVHASH
 node "$VERIFY" --d D01 --gate pre_ci --root "$P24" > "$TMP/norevh.out" 2>&1
 grep -q 'review без code_hash' "$TMP/norevh.out" && ok "1.24: review без привязки к коду отвергается" || bad "review без code_hash прошёл"
-cp "$TMP/rev.bak" "$P24/specproof/OUTPUT/evidence/D01.review.json"
+cp "$TMP/rev.bak" "$P24/witness-done/OUTPUT/evidence/D01.review.json"
 
 # conflicts_ref не указан — это «конфликтов нет», а не ошибка
 node "$VERIFY" --d D01 --gate pre_ci --root "$P24" > "$TMP/noconf.out" 2>&1
@@ -1251,16 +1251,16 @@ grep -q 'conflicts_ref set but conflicts_applied' "$TMP/noconf.out" && bad "пу
 
 # зависитмость с дефисом всё равно проверяется (диапазон разворачивается в D09 и D10)
 printf '| D | Кратко | split_group | Статус | evidence_ref | Доказательства | Обновлено | Заметки |\n|---|---|---|---|---|---|---|---|\n| D09 | API | — | in_progress | — | — | — | — |\n| D10 | UI | — | not_started | — | — | — | — |\n' \
-  > "$P24/specproof/OUTPUT/roadmaps/progress.md"
-sed -i.bak 's/| module | none |/| module | none |\n| depends_done | D09-D10 |/' "$P24/specproof/OUTPUT/prompts/D01.md"
-rm -f "$P24/specproof/OUTPUT/prompts/D01.md.bak"
+  > "$P24/witness-done/OUTPUT/roadmaps/progress.md"
+sed -i.bak 's/| module | none |/| module | none |\n| depends_done | D09-D10 |/' "$P24/witness-done/OUTPUT/prompts/D01.md"
+rm -f "$P24/witness-done/OUTPUT/prompts/D01.md.bak"
 node "$VERIFY" --d D01 --gate pre_ci --root "$P24" > "$TMP/deps.out" 2>&1
 grep -q 'Depends: D09, D10' "$TMP/deps.out" && ok "1.24: depends_done с дефисом не обходит проверку" || bad "зависимость с дефисом пропущена"
-sed -i.bak '/| depends_done | D09-D10 |/d' "$P24/specproof/OUTPUT/prompts/D01.md"
-rm -f "$P24/specproof/OUTPUT/prompts/D01.md.bak"
+sed -i.bak '/| depends_done | D09-D10 |/d' "$P24/witness-done/OUTPUT/prompts/D01.md"
+rm -f "$P24/witness-done/OUTPUT/prompts/D01.md.bak"
 
 # L0: объявление уровня не отменяет проверку на код
-cat > "$P24/specproof/OUTPUT/prompts/D02.md" <<'P24L0'
+cat > "$P24/witness-done/OUTPUT/prompts/D02.md" <<'P24L0'
 # D02 — документы
 
 ## FIT_CHECKS
@@ -1291,7 +1291,7 @@ rm -f "$P24/src/hack.py"
 # L0 — законный структурный акт: релиз не путает его с «акт снят без команд»
 node "$VERIFY" --d D02 --gate pre_ci --root "$P24" >/dev/null 2>&1
 printf '| D | Кратко | split_group | Статус | evidence_ref | Доказательства | Обновлено | Заметки |\n|---|---|---|---|---|---|---|---|\n| D02 | Docs | — | done | evidence/D02.json | — | — | — |\n' \
-  > "$P24/specproof/OUTPUT/roadmaps/progress.md"
+  > "$P24/witness-done/OUTPUT/roadmaps/progress.md"
 node "$VERIFY" --gate pre_release --root "$P24" > "$TMP/l0rel.out" 2>&1
 if grep -q 'D02: акт снят без команд\|evidence D02 tax_pass=false' "$TMP/l0rel.out"; then
   bad "L0 ошибочно считается непроверенным"
@@ -1306,31 +1306,31 @@ import { seal } from '$ROOT/SEED/sp-tools/evidence-lib.mjs';
 const data = { d: 'D09', level: 'L1', gate: 'pre_ci', producer: 'x', scopes: { unit: true },
   fit: { acceptance_ids: ['A09.1', 'A09.2', 'A09.3'], produces: ['src/ghost.py'], ops_checked: [] },
   issues: [], tax_pass: true, timestamp: new Date().toISOString() };
-fs.writeFileSync('$P24/specproof/OUTPUT/evidence/D09.json', JSON.stringify(seal('$P24', data), null, 2));
+fs.writeFileSync('$P24/witness-done/OUTPUT/evidence/D09.json', JSON.stringify(seal('$P24', data), null, 2));
 " >/dev/null 2>&1
 node "$VERIFY" --verify-evidence OUTPUT/evidence/D09.json --root "$P24" > "$TMP/abs.out" 2>&1
 grep -q 'содержит отсутствующие файлы' "$TMP/abs.out" && ok "1.24: --verify-evidence ловит акт об отсутствующем файле" || bad "акт о ghost.py прошёл"
-rm -f "$P24/specproof/OUTPUT/evidence/D09.json"
+rm -f "$P24/witness-done/OUTPUT/evidence/D09.json"
 
 # progress: украшенный статус — это done (а не пропуск), нераспознанный — провал
 printf '| D | Кратко | split_group | Статус | evidence_ref | Доказательства | Обновлено | Заметки |\n|---|---|---|---|---|---|---|---|\n| D07 | Docs | — | done ✅ | — | — | — | — |\n' \
-  > "$P24/specproof/OUTPUT/roadmaps/progress.md"
+  > "$P24/witness-done/OUTPUT/roadmaps/progress.md"
 node "$VERIFY" --gate pre_release --root "$P24" > "$TMP/decor.out" 2>&1
 grep -q 'done D07 without evidence' "$TMP/decor.out" && ok "1.24: done ✅ читается как done" || bad "украшенный статус выпал из проверок"
 printf '| D | Кратко | split_group | Статус | evidence_ref | Доказательства | Обновлено | Заметки |\n|---|---|---|---|---|---|---|---|\n| D01 | API | — | готово | — | — | — | — |\n' \
-  > "$P24/specproof/OUTPUT/roadmaps/progress.md"
+  > "$P24/witness-done/OUTPUT/roadmaps/progress.md"
 node "$VERIFY" --gate pre_release --root "$P24" > "$TMP/unknown.out" 2>&1
 grep -q 'статус не распознан' "$TMP/unknown.out" && ok "1.24: нераспознанный статус — провал, а не пропуск" || bad "нераспознанный статус пропущен"
-printf '| D | Статус |\n|---|---|\n' > "$P24/specproof/OUTPUT/roadmaps/progress.md"
+printf '| D | Статус |\n|---|---|\n' > "$P24/witness-done/OUTPUT/roadmaps/progress.md"
 node "$VERIFY" --gate pre_release --root "$P24" > "$TMP/empty.out" 2>&1
 grep -q 'ни одной строки задания' "$TMP/empty.out" && ok "1.24: пустой progress не проходит релиз" || bad "пустой progress прошёл"
 
 # акт релиза проверяется как акт: печать, метки, привязка
 printf '| D | Кратко | split_group | Статус | evidence_ref | Доказательства | Обновлено | Заметки |\n|---|---|---|---|---|---|---|---|\n| D01 | API | — | done | evidence/D01.json | — | — | — |\n' \
-  > "$P24/specproof/OUTPUT/roadmaps/progress.md"
-printf '# smoke\n' > "$P24/specproof/OUTPUT/docs/runbooks/product-smoke.md"
+  > "$P24/witness-done/OUTPUT/roadmaps/progress.md"
+printf '# smoke\n' > "$P24/witness-done/OUTPUT/docs/runbooks/product-smoke.md"
 printf '#!/usr/bin/env bash\necho "A01.1 ok"\n' > "$P24/scripts/smoke/product-smoke.sh"
-echo '{"tax_pass":true}' > "$P24/specproof/OUTPUT/evidence/RELEASE-product-smoke.json"
+echo '{"tax_pass":true}' > "$P24/witness-done/OUTPUT/evidence/RELEASE-product-smoke.json"
 node "$VERIFY" --gate pre_release --root "$P24" > "$TMP/forged.out" 2>&1
 grep -q 'нет поля evidence_hash' "$TMP/forged.out" && ok "1.24: поддельный акт смоука отвергается" || bad "18-байтный акт смоука прошёл"
 node "$VERIFY" --gate product-smoke --skip-commands --root "$P24" >/dev/null 2>&1
@@ -1357,8 +1357,8 @@ grep -q 'акт снят без команд' "$TMP/skipact.out" && ok "1.24: р
 node "$VERIFY" --d D01 --gate pre_ci --root "$P24" >/dev/null 2>&1
 
 # план: правка после прогона обнуляет акт, свой автотрейс обновляется
-mkdir -p "$P24/specproof/OUTPUT/runtime"
-cat > "$P24/specproof/OUTPUT/runtime/runtime-plan.json" <<'P24PLAN'
+mkdir -p "$P24/witness-done/OUTPUT/runtime"
+cat > "$P24/witness-done/OUTPUT/runtime/runtime-plan.json" <<'P24PLAN'
 {
   "version": 1,
   "stack": ["node"],
@@ -1372,7 +1372,7 @@ cat > "$P24/specproof/OUTPUT/runtime/runtime-plan.json" <<'P24PLAN'
 }
 P24PLAN
 expect 0 "1.24: план исполняется" node "$VERIFY" --gate runtime --root "$P24"
-python3 - "$P24/specproof/OUTPUT/runtime/runtime-plan.json" <<'PLANMUT'
+python3 - "$P24/witness-done/OUTPUT/runtime/runtime-plan.json" <<'PLANMUT'
 import json, sys
 p = sys.argv[1]
 d = json.load(open(p, encoding='utf-8'))
@@ -1381,7 +1381,7 @@ json.dump(d, open(p, 'w', encoding='utf-8'), indent=2)
 PLANMUT
 node "$VERIFY" --gate pre_release --root "$P24" > "$TMP/planstale.out" 2>&1
 grep -q 'план изменён после прогона' "$TMP/planstale.out" && ok "1.24: правка плана обнуляет акт runtime" || bad "устаревший акт runtime прошёл"
-python3 - "$P24/specproof/OUTPUT/runtime/runtime-plan.json" <<'PLANBACK'
+python3 - "$P24/witness-done/OUTPUT/runtime/runtime-plan.json" <<'PLANBACK'
 import json, sys
 p = sys.argv[1]
 d = json.load(open(p, encoding='utf-8'))
@@ -1397,23 +1397,23 @@ node --input-type=module -e "
 import fs from 'node:fs';
 import { execFileSync } from 'node:child_process';
 const head = execFileSync('git', ['-C', '$P24', 'rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-const t = JSON.parse(fs.readFileSync('$P24/specproof/OUTPUT/evidence/D01.trace.json', 'utf8'));
+const t = JSON.parse(fs.readFileSync('$P24/witness-done/OUTPUT/evidence/D01.trace.json', 'utf8'));
 if (t.commit !== head) { console.error('трейс не обновлён'); process.exit(1); }
 " >/dev/null 2>&1 && ok "1.24: автотрейс обновляется после смены кода" || bad "автотрейс остался на старом коммите"
 
 # evidence-sync — отдельный гейт сверки progress ↔ evidence, а не псевдоним pre_release
-printf '| D | Статус |\n|---|---|\n| D01 | done |\n' > "$P24/specproof/OUTPUT/roadmaps/progress.md"
+printf '| D | Статус |\n|---|---|\n| D01 | done |\n' > "$P24/witness-done/OUTPUT/roadmaps/progress.md"
 node --input-type=module -e "
 import fs from 'node:fs';
 import { seal } from '$ROOT/SEED/sp-tools/evidence-lib.mjs';
 const data = { d: 'D10', level: 'L1', gate: 'pre_ci', producer: 'x', scopes: { unit: true },
   fit: { acceptance_ids: ['A10.1'], produces: [], ops_checked: [] }, issues: [], tax_pass: true, timestamp: new Date().toISOString() };
-fs.writeFileSync('$P24/specproof/OUTPUT/evidence/D10.json', JSON.stringify(seal('$P24', data), null, 2));
+fs.writeFileSync('$P24/witness-done/OUTPUT/evidence/D10.json', JSON.stringify(seal('$P24', data), null, 2));
 " >/dev/null 2>&1
 node "$VERIFY" --gate evidence-sync --root "$P24" > "$TMP/sync.out" 2>&1
 grep -q 'evidence/D10.json без строки в progress.md' "$TMP/sync.out" && ok "1.24: evidence-sync ловит акт без строки прогресса" || bad "evidence-sync не заметил сироту"
 grep -q '"gate": "evidence-sync"' "$TMP/sync.out" && ok "1.24: evidence-sync пишет свой акт, а не RELEASE.json" || bad "evidence-sync остался псевдонимом"
-rm -f "$P24/specproof/OUTPUT/evidence/D10.json"
+rm -f "$P24/witness-done/OUTPUT/evidence/D10.json"
 
 # doctor --strict не падает на собственных адаптерах после rules --sync
 node "$CLI" rules --sync --root "$P24" >/dev/null 2>&1
@@ -1425,9 +1425,9 @@ grep -q 'вне PRODUCES' "$TMP/strict24.out" && bad "doctor считает ад
 P26="$TMP/p26"
 new_project p26
 start_run "$P26" greenfield 04
-mkdir -p "$P26/src" "$P26/tests" "$P26/specproof/OUTPUT/prompts" "$P26/specproof/OUTPUT/tooling"
+mkdir -p "$P26/src" "$P26/tests" "$P26/witness-done/OUTPUT/prompts" "$P26/witness-done/OUTPUT/tooling"
 printf 'x\n' > "$P26/src/a.py"
-printf -- '- lint: `true`\n- typecheck: `true`\n- test: `true`\n' > "$P26/specproof/OUTPUT/tooling/verify-commands.md"
+printf -- '- lint: `true`\n- typecheck: `true`\n- test: `true`\n' > "$P26/witness-done/OUTPUT/tooling/verify-commands.md"
 write_bind_prompt() { # write_bind_prompt <фраза A01.1>
   {
     echo '# D01 — связь'
@@ -1464,7 +1464,7 @@ write_bind_prompt() { # write_bind_prompt <фраза A01.1>
     echo '| A01.1 | событие в очереди | воркер взял его | запись на диске раньше уведомления |'
     echo '| A01.2 | рестарт после сбоя | очередь перечитана | seq не переиспользован |'
     echo '| A01.3 | сбой записи | воркер повторяет | вызывающий получает ошибку |'
-  } > "$P26/specproof/OUTPUT/prompts/D01_bind.md"
+  } > "$P26/witness-done/OUTPUT/prompts/D01_bind.md"
   bind_tests_from_prompt "$P26" D01
 }
 write_bind_prompt
@@ -1477,7 +1477,7 @@ expect 0 "1.27: фразы объявлены тестами с утвержде
   node "$VERIFY" --d D01 --gate pre_ci --root "$P26"
 node --input-type=module -e "
 import fs from 'node:fs';
-const j = JSON.parse(fs.readFileSync('$P26/specproof/OUTPUT/evidence/D01.json', 'utf8'));
+const j = JSON.parse(fs.readFileSync('$P26/witness-done/OUTPUT/evidence/D01.json', 'utf8'));
 if (!j.fit.acceptance_binding || j.fit.acceptance_binding.binding_hash.length !== 64) { console.error('нет binding_hash'); process.exit(1); }
 if (j.fit.acceptance_binding.bound_ids.length !== 3) { console.error('bound: ' + j.fit.acceptance_binding.bound_ids); process.exit(1); }
 " >/dev/null 2>&1 && ok "1.27: акт несёт отпечаток связи и список закрытых фраз" \
@@ -1519,13 +1519,13 @@ rm -f "$P26/tests/D01_acceptance.test.ts"
 # 5) освобождение через acceptance_ops — явное, с записью в акте
 write_bind_prompt "A01.3"
 node "$VERIFY" --d D01 --gate pre_ci --root "$P26" > "$TMP/bn5.out" 2>&1
-grep -q '"A01.3"' "$P26/specproof/OUTPUT/evidence/D01.json" && ok "1.27: acceptance_ops снимает фразу с кодового теста явно" \
+grep -q '"A01.3"' "$P26/witness-done/OUTPUT/evidence/D01.json" && ok "1.27: acceptance_ops снимает фразу с кодового теста явно" \
   || bad "acceptance_ops не попал в акт"
 
 # 6) test-plan: гейт acceptance сверяет план с тестами
 write_bind_prompt
-mkdir -p "$P26/specproof/OUTPUT/tests"
-cat > "$P26/specproof/OUTPUT/tests/test-plan-D01.md" <<'PLAN'
+mkdir -p "$P26/witness-done/OUTPUT/tests"
+cat > "$P26/witness-done/OUTPUT/tests/test-plan-D01.md" <<'PLAN'
 | ID | Фраза | Тест | Статус |
 |----|-------|------|--------|
 | A01.1 | запись раньше уведомления | tests/D01_acceptance.test.ts | covered |
@@ -1533,21 +1533,21 @@ cat > "$P26/specproof/OUTPUT/tests/test-plan-D01.md" <<'PLAN'
 | A01.3 | ошибка записи | tests/D01_acceptance.test.ts | covered |
 PLAN
 expect 0 "1.27: --gate acceptance с согласованным test-plan" node "$VERIFY" --gate acceptance --d D01 --root "$P26"
-sed -i.bak 's#tests/D01_acceptance.test.ts | covered |#tests/other.test.ts | covered |#' "$P26/specproof/OUTPUT/tests/test-plan-D01.md"
-rm -f "$P26/specproof/OUTPUT/tests/test-plan-D01.md.bak"
+sed -i.bak 's#tests/D01_acceptance.test.ts | covered |#tests/other.test.ts | covered |#' "$P26/witness-done/OUTPUT/tests/test-plan-D01.md"
+rm -f "$P26/witness-done/OUTPUT/tests/test-plan-D01.md.bak"
 node "$VERIFY" --gate acceptance --d D01 --root "$P26" > "$TMP/bn6.out" 2>&1
 grep -q 'этот тест фразу не объявляет' "$TMP/bn6.out" && ok "1.27: test-plan с чужим тестом отвергается" \
   || bad "план разошёлся с тестами, гейт молчит"
-rm -rf "$P26/specproof/OUTPUT/tests"
+rm -rf "$P26/witness-done/OUTPUT/tests"
 
 # 7) фраза переписана после приёмки — акт устарел
-mkdir -p "$P26/specproof/OUTPUT/roadmaps"
-printf '| D | Статус |\n|---|---|\n| D01 | done |\n' > "$P26/specproof/OUTPUT/roadmaps/progress.md"
+mkdir -p "$P26/witness-done/OUTPUT/roadmaps"
+printf '| D | Статус |\n|---|---|\n| D01 | done |\n' > "$P26/witness-done/OUTPUT/roadmaps/progress.md"
 node "$VERIFY" --gate pre_release --root "$P26" > "$TMP/bn7a.out" 2>&1
 grep -q 'связь фраз и тестов изменилась после приёмки' "$TMP/bn7a.out" && bad "свежий акт считается устаревшим" \
   || ok "1.27: свежая связь не ложно устаревает"
-sed -i.bak 's#| запись на диске раньше уведомления |#| запись на диске позже уведомления |#' "$P26/specproof/OUTPUT/prompts/D01_bind.md"
-rm -f "$P26/specproof/OUTPUT/prompts/D01_bind.md.bak"
+sed -i.bak 's#| запись на диске раньше уведомления |#| запись на диске позже уведомления |#' "$P26/witness-done/OUTPUT/prompts/D01_bind.md"
+rm -f "$P26/witness-done/OUTPUT/prompts/D01_bind.md.bak"
 node "$VERIFY" --gate pre_release --root "$P26" > "$TMP/bn7b.out" 2>&1
 grep -q 'связь фраз и тестов изменилась после приёмки' "$TMP/bn7b.out" \
   && ok "1.27: правка фразы после приёмки видна в релизе" \

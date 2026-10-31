@@ -9,16 +9,16 @@
 >
 > В документации короткая форма `sp status` / `sp-verify …` означает
 > `node scripts/sp-tools/sp.mjs status` (после шага 08) или
-> `node specproof/SEED/sp-tools/sp.mjs status` (если CLI не копировали).
+> `node witness-done/SEED/sp-tools/sp.mjs status` (если CLI не копировали).
 
 ## Команды
 
 Из корня проекта (или с путём к фабрике):
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs --help
-node specproof/SEED/sp-tools/sp-retrieve.mjs --help
-node specproof/SEED/sp-tools/sp-verify.mjs --help
+node witness-done/SEED/sp-tools/sp.mjs --help
+node witness-done/SEED/sp-tools/sp-retrieve.mjs --help
+node witness-done/SEED/sp-tools/sp-verify.mjs --help
 ```
 
 ### sp — единый вход
@@ -71,7 +71,7 @@ node specproof/SEED/sp-tools/sp-verify.mjs --help
 | `--timeout <мс>` | `update` | Таймаут HTTPS-запроса, по умолчанию 8000 |
 | `--json` | все | Машинный вывод вместо человекочитаемого |
 | `--root <путь>` | все | Корень проекта (по умолчанию текущий каталог) |
-| `--factory <путь>` | все | Корень канона (по умолчанию `<root>/specproof`, иначе каталог скрипта) |
+| `--factory <путь>` | все | Корень канона (по умолчанию `<root>/witness-done`, иначе каталог скрипта) |
 
 Самопроверка CLI на одноразовых фикстурах (не трогает проект):
 
@@ -90,10 +90,10 @@ bash SEED/sp-tools/selftest.sh   # SELFTEST: PASS
 #   --offline        — только кэш, без сети
 #   --timeout <мс>   — таймаут HTTPS-запроса, по умолчанию 8000
 #   --json           — машинный вывод
-node specproof/SEED/sp-tools/sp.mjs update
-node specproof/SEED/sp-tools/sp.mjs update --no-cache
-node specproof/SEED/sp-tools/sp.mjs update --offline
-node specproof/SEED/sp-tools/sp.mjs update --json
+node witness-done/SEED/sp-tools/sp.mjs update
+node witness-done/SEED/sp-tools/sp.mjs update --no-cache
+node witness-done/SEED/sp-tools/sp.mjs update --offline
+node witness-done/SEED/sp-tools/sp.mjs update --json
 ```
 
 Порядок источников:
@@ -107,7 +107,7 @@ node specproof/SEED/sp-tools/sp.mjs update --json
 Коды: `0` — актуально, `2` — доступно обновление, `3` — проверить не удалось (нет сети, пустой
 репозиторий, нет `SEED/update.json`). «Неизвестно» не маскируется под «всё хорошо».
 
-Кэш — `specproof/.sp-cache/update.json` (в `.gitignore`), TTL 24 ч. `sp status` показывает строку
+Кэш — `witness-done/.sp-cache/update.json` (в `.gitignore`), TTL 24 ч. `sp status` показывает строку
 `Версия фабрики: <VERSION> (обновление: …)` **только из кэша** и никогда не ходит в сеть.
 
 `update` не применяет обновление: обновление канона посреди прогона меняет шаблоны под уже
@@ -115,7 +115,7 @@ node specproof/SEED/sp-tools/sp.mjs update --json
 
 ```bash
 # установка клоном
-git -C specproof pull --ff-only
+git -C witness-done pull --ff-only
 node SEED/sp-tools/sp.mjs rules --sync
 node SEED/sp-tools/sp.mjs doctor --strict
 
@@ -124,7 +124,7 @@ node SEED/sp-tools/sp.mjs doctor --strict
 
 В pre-commit эта проверка не входит: сеть в хуке означает падение коммита без интернета.
 
-В самом репозитории канона журнал сопровождения пишется в `.specproof-work/` — каталог в
+В самом репозитории канона журнал сопровождения пишется в `.witness-done-work/` — каталог в
 `.gitignore`: канон поставляется копией, и чужие записи внутри него недопустимы. Заготовка
 журнала для проектов лежит в `SEED/journal/` и поставляется **пустой**: заполненные примеры
 означали бы, что в новый проект приехали чужие решения.
@@ -133,19 +133,19 @@ node SEED/sp-tools/sp.mjs doctor --strict
 
 | | Проект с установленной фабрикой | Сам репозиторий фабрики |
 |---|---|---|
-| Путь к CLI | `specproof/SEED/sp-tools/sp.mjs` | `SEED/sp-tools/sp.mjs` |
-| Журнал входа и решений | `journal/intake/`, `journal/decisions/`, индекс `journal/decisions.md` | `.specproof-work/intake/`, `.specproof-work/decisions/` |
-| Журнал в git | **коммитится** (`journal/` в корне проекта) | не коммитится (`.specproof-work/` в `.gitignore`) |
+| Путь к CLI | `witness-done/SEED/sp-tools/sp.mjs` | `SEED/sp-tools/sp.mjs` |
+| Журнал входа и решений | `journal/intake/`, `journal/decisions/`, индекс `journal/decisions.md` | `.witness-done-work/intake/`, `.witness-done-work/decisions/` |
+| Журнал в git | **коммитится** (`journal/` в корне проекта) | не коммитится (`.witness-done-work/` в `.gitignore`) |
 | `next:` для правки | `PIPELINE/...`, `R02_propose_change.md` | правка канона → `./validate.sh` |
 | Гейт | `sp doctor --strict` | `./validate.sh` + `sp doctor --strict` (режим канона) |
 
-`.specproof-work/` — рабочий журнал мейнтейнера, он в `.gitignore` и в поставку не попадает:
+`.witness-done-work/` — рабочий журнал мейнтейнера, он в `.gitignore` и в поставку не попадает:
 `OUTPUT/` в репозитории обязан оставаться пустым, иначе `validate.sh` и `doctor` считают его
 артефактом прошлого прогона.
 
 `sp doctor` в корне канона не ищет `MANIFEST`, intake и evidence. Он проверяет: маркеры протокола
 в `AGENTS.md`, 8 обязательных адаптеров IDE, пустой `OUTPUT/`, `VERSION` одной строкой `X.Y.Z`,
-`SEED/update.json`, единственность `ORCHESTRATOR.md` и то, что `.specproof-work/` не уедет в git.
+`SEED/update.json`, единственность `ORCHESTRATOR.md` и то, что `.witness-done-work/` не уедет в git.
 Успех выглядит так:
 
 ```text
@@ -194,7 +194,7 @@ sp doctor --strict             # гейт входа; --strict = предупр�
 | `--query "…"` | Черновик кандидатов (keyword; embeddings — опционально позже) |
 | `--out path` | Куда писать draft pack |
 | `--root path` | PROJECT_ROOT (default: cwd) |
-| `--factory path` | путь к specproof (default: `./specproof`) |
+| `--factory path` | путь к witness-done (default: `./witness-done`) |
 
 **Важно:** `--validate` **не создаёт** pack. Отсутствующий pack — это exit 2 и явная ошибка: набор
 контекста собирается решением, а не самим валидатором (иначе проверка доказывает сама себя).

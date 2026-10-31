@@ -8,22 +8,22 @@ Platform engineer. Ставишь **реальные** конфиги линте
 
 - `AGENTS.md` в корне проекта (конституция), architecture, nfr, security/secrets
 - `OUTPUT/MANIFEST.md` → `PROJECT_ROOT`
-- `@specproof/catalogs/stack-policy.md`
-- `@specproof/catalogs/cicd-environments.md` (**обязательно**)
-- `@specproof/catalogs/design-input.md` — если design present, допиши токены в `design-notes.md`
-- `@specproof/SEED/eslintrc.baseline.js` + `eslint-plugin-local-rules/` — **только если** FE и/или backend на JS/TS
-- `@specproof/SEED/golangci.yml.example` — **только если** backend Go
-- `@specproof/TEMPLATES/tooling-pack.md`
-- `@specproof/TEMPLATES/cicd-and-environments.md`
-- `@specproof/SEED/ci.yml.example`
-- `@specproof/catalogs/verification-tax.md`
-- `@specproof/catalogs/contour-smoke.md`
-- `@specproof/catalogs/agent-harness.md`
-- `@specproof/catalogs/context-rag.md`
-- `@specproof/SEED/sp-tools/` — CLI `sp-retrieve` / `sp-verify`
-- `@specproof/SEED/smoke/` — product-smoke + wave-api-smoke examples
-- `@specproof/TEMPLATES/runtime-plan.md` + `@specproof/catalogs/runtime-plan.md` (**обязательно с v1.23**)
-- `@specproof/SEED/sp-tools/selftest.sh` — **прогоняется перед сдачей**: он проверяет, что гейты
+- `@witness-done/catalogs/stack-policy.md`
+- `@witness-done/catalogs/cicd-environments.md` (**обязательно**)
+- `@witness-done/catalogs/design-input.md` — если design present, допиши токены в `design-notes.md`
+- `@witness-done/SEED/eslintrc.baseline.js` + `eslint-plugin-local-rules/` — **только если** FE и/или backend на JS/TS
+- `@witness-done/SEED/golangci.yml.example` — **только если** backend Go
+- `@witness-done/TEMPLATES/tooling-pack.md`
+- `@witness-done/TEMPLATES/cicd-and-environments.md`
+- `@witness-done/SEED/ci.yml.example`
+- `@witness-done/catalogs/verification-tax.md`
+- `@witness-done/catalogs/contour-smoke.md`
+- `@witness-done/catalogs/agent-harness.md`
+- `@witness-done/catalogs/context-rag.md`
+- `@witness-done/SEED/sp-tools/` — CLI `sp-retrieve` / `sp-verify`
+- `@witness-done/SEED/smoke/` — product-smoke + wave-api-smoke examples
+- `@witness-done/TEMPLATES/runtime-plan.md` + `@witness-done/catalogs/runtime-plan.md` (**обязательно с v1.23**)
+- `@witness-done/SEED/sp-tools/selftest.sh` — **прогоняется перед сдачей**: он проверяет, что гейты
   падают на неразобранном входе, а не пропускают его (правило v1.24)
 
 ## Выбор tooling по стеку
@@ -81,7 +81,7 @@ Scripts `lint` согласованы с `.cursorrules`.
 
 ## VerificationTax + Agent Harness + Context RAG + Contour smoke (обязательно с v1.10)
 
-1. Скопируй `SEED/sp-tools/` → `PROJECT_ROOT/scripts/sp-tools/` (или `specproof/SEED/sp-tools` оставь и укажи PATH в tooling).
+1. Скопируй `SEED/sp-tools/` → `PROJECT_ROOT/scripts/sp-tools/` (или `witness-done/SEED/sp-tools` оставь и укажи PATH в tooling).
 2. Создай **`OUTPUT/tooling/verify-commands.md`**: команды lint/typecheck/test; **wave smoke** vs **full product-smoke**; как вызывать `sp-verify --d Dxx --gate pre_ci` и `sp-verify --gate pre_release`.
 3. Создай **`OUTPUT/tooling/harness.md`** по `catalogs/agent-harness.md`: loop, Axx → evidence `acceptance_ids`, resume-фразы, запрет done без evidence.
 4. Из **`SEED/smoke/`** материализуй:
@@ -105,8 +105,8 @@ Scripts `lint` согласованы с `.cursorrules`.
 6. Проверь план:
 
    ```bash
-   node specproof/SEED/sp-tools/sp-verify.mjs --gate runtime-plan   # статика: tax_pass: true
-   node specproof/SEED/sp-tools/sp-verify.mjs --gate runtime        # подъём + проверка + teardown
+   node witness-done/SEED/sp-tools/sp-verify.mjs --gate runtime-plan   # статика: tax_pass: true
+   node witness-done/SEED/sp-tools/sp-verify.mjs --gate runtime        # подъём + проверка + teardown
    ```
 
    Второй прогон — то, что раньше называлось «нет runtime-верификации». Он поднимает окружение,

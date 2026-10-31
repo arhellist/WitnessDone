@@ -21,8 +21,8 @@ export const BOOKKEEPING_PREFIXES = [
   'OUTPUT/',
   'journal/',
   'spec-state/',
-  'specproof/OUTPUT/',
-  '.specproof-work/',
+  'witness-done/OUTPUT/',
+  '.witness-done-work/',
   'AGENTS.md',
   '.cursorrules',
   'CLAUDE.md',
@@ -131,7 +131,7 @@ function walkFiles(root, limit = 4000) {
     }
     for (const e of entries) {
       if (out.length >= limit) return;
-      if (['.git', 'node_modules', '.specproof-work', 'dist', 'build'].includes(e.name)) continue;
+      if (['.git', 'node_modules', '.witness-done-work', 'dist', 'build'].includes(e.name)) continue;
       const r = rel ? `${rel}/${e.name}` : e.name;
       if (e.isDirectory()) walk(path.join(dir, e.name), r);
       else out.push(r);
@@ -392,7 +392,7 @@ function walkProject(root, limit = 4000) {
     }
     for (const e of entries) {
       if (out.length >= limit) return;
-      if (['.git', 'node_modules', '.specproof-work', 'dist', 'build'].includes(e.name)) continue;
+      if (['.git', 'node_modules', '.witness-done-work', 'dist', 'build'].includes(e.name)) continue;
       const r = rel ? `${rel}/${e.name}` : e.name;
       if (e.isDirectory()) walk(path.join(dir, e.name), r);
       else out.push(r);

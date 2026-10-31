@@ -2,12 +2,12 @@
 
 ## Роль
 
-Ты — оркестратор Witness Done. Твоя задача на этом шаге: **инициализировать прогон**, проверить вход и подготовить OUTPUT. Код приложения **не писать**. Версия — из `specproof/VERSION`.
+Ты — оркестратор Witness Done. Твоя задача на этом шаге: **инициализировать прогон**, проверить вход и подготовить OUTPUT. Код приложения **не писать**. Версия — из `witness-done/VERSION`.
 
 ## Корень проекта (PROJECT_ROOT)
 
-`PROJECT_ROOT` = директория, в которой лежит папка `specproof/`  
-(пример: если фабрика в `/app/specproof`, то PROJECT_ROOT = `/app`).
+`PROJECT_ROOT` = директория, в которой лежит папка `witness-done/`  
+(пример: если фабрика в `/app/witness-done`, то PROJECT_ROOT = `/app`).
 
 На шагах **00**, **02** и **08** фабрика **обязана** писать файлы в `PROJECT_ROOT` (не только в OUTPUT):
 
@@ -15,7 +15,7 @@
 |------|-----|
 | `PROJECT_ROOT/AGENTS.md` | 00 (протокол входа), 02 (конституция) |
 | `PROJECT_ROOT/.cursorrules` | 02 |
-| `PROJECT_ROOT/CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/specproof.mdc`, `.clinerules/specproof.md`, `.devin/rules/specproof.md` | 00 (генерация), 02 (обновление) |
+| `PROJECT_ROOT/CLAUDE.md`, `GEMINI.md`, `.github/copilot-instructions.md`, `.cursor/rules/witness-done.mdc`, `.clinerules/witness-done.md`, `.devin/rules/witness-done.md` | 00 (генерация), 02 (обновление) |
 | `PROJECT_ROOT/.cursor/commands/sp.md` и другие команды `/sp` | 00 |
 | `PROJECT_ROOT/.eslintrc.js` | 08 |
 | `PROJECT_ROOT/eslint-plugin-local-rules/` | 08 |
@@ -24,15 +24,15 @@
 
 ## Вход (обязательно прочитай)
 
-- `@specproof/INPUT/TECH_SPEC.md`
-- `@specproof/README.md`
-- `@specproof/VERSION`
-- `@specproof/TEMPLATES/manifest.md`
-- `@specproof/TEMPLATES/entry-protocol.md`
-- `@specproof/catalogs/agent-rules.md`
-- `@specproof/catalogs/intake-and-decisions.md`
-- `@specproof/SEED/agent-config/manifest.json`
-- Опционально: `@specproof/INPUT/DESIGN.html`, `@specproof/INPUT/design/*.html` (см. `catalogs/design-input.md`)
+- `@witness-done/INPUT/TECH_SPEC.md`
+- `@witness-done/README.md`
+- `@witness-done/VERSION`
+- `@witness-done/TEMPLATES/manifest.md`
+- `@witness-done/TEMPLATES/entry-protocol.md`
+- `@witness-done/catalogs/agent-rules.md`
+- `@witness-done/catalogs/intake-and-decisions.md`
+- `@witness-done/SEED/agent-config/manifest.json`
+- Опционально: `@witness-done/INPUT/DESIGN.html`, `@witness-done/INPUT/design/*.html` (см. `catalogs/design-input.md`)
 
 ## Правила
 
@@ -59,9 +59,9 @@ cp TEMPLATES/manifest.md OUTPUT/MANIFEST.md   # путь от корня фаб�
 - название проекта из ТЗ;
 - `MODE: greenfield` (или `brownfield`, если работа идёт по `PIPELINE/R00`…);
 - дата старта прогона;
-- **Версия фабрики** = содержимое `specproof/VERSION`;
+- **Версия фабрики** = содержимое `witness-done/VERSION`;
 - явная строка `PROJECT_ROOT: …`;
-- `FACTORY_PATH: specproof/` — чтобы артефакты ссылались на канон, а не на «где-то там»;
+- `FACTORY_PATH: witness-done/` — чтобы артефакты ссылались на канон, а не на «где-то там»;
 - **профиль** (`PROFILES.md`): выбрать один и записать в MANIFEST вместе с отклонениями;
 - `design_input: present | none` (есть ли HTML в INPUT/DESIGN.html или INPUT/design/*.html);
 - `coverage_matrix: pending` (заполнится на шаге 09);
@@ -115,17 +115,17 @@ Witness Done (никакого `AGENTS.md` ещё нет).
 2. Сгенерируй адаптеры IDE:
 
    ```bash
-   node specproof/SEED/sp-tools/sp.mjs rules --sync
-   node specproof/SEED/sp-tools/sp.mjs rules --check
+   node witness-done/SEED/sp-tools/sp.mjs rules --sync
+   node witness-done/SEED/sp-tools/sp.mjs rules --check
    ```
 
-   Создаются `.cursorrules`, `.cursor/rules/specproof.mdc`, `CLAUDE.md`, `GEMINI.md`,
-   `.github/copilot-instructions.md`, `.clinerules/specproof.md`, `.devin/rules/specproof.md`,
+   Создаются `.cursorrules`, `.cursor/rules/witness-done.mdc`, `CLAUDE.md`, `GEMINI.md`,
+   `.github/copilot-instructions.md`, `.clinerules/witness-done.md`, `.devin/rules/witness-done.md`,
    команды `/sp`. Канон: `catalogs/agent-rules.md`. `--check` должен вернуть `exit 0`.
 3. Установи pre-commit (если проект под git):
 
    ```bash
-   cp specproof/SEED/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+   cp witness-done/SEED/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
    ```
 
    Хук гоняет `sp doctor --staged` и не даёт закоммитить правку вне маршрута.

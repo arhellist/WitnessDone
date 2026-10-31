@@ -7,11 +7,11 @@
 1. **Запрос берётся дословно.** Текст после `/sp` — это запрос человека. Если текста нет —
    спроси одним вопросом, что нужно сделать, и остановись.
 2. **Состояние.** Выполни:
-   `node specproof/SEED/sp-tools/sp.mjs status`
-   Если CLI нет — прочитай `specproof/OUTPUT/MANIFEST.md`, `specproof/OUTPUT/roadmaps/progress.md`
-   и `specproof/spec-state/` руками.
+   `node witness-done/SEED/sp-tools/sp.mjs status`
+   Если CLI нет — прочитай `witness-done/OUTPUT/MANIFEST.md`, `witness-done/OUTPUT/roadmaps/progress.md`
+   и `witness-done/spec-state/` руками.
 3. **Запись входа.** Выполни:
-   `node specproof/SEED/sp-tools/sp.mjs intake "<запрос дословно>"`
+   `node witness-done/SEED/sp-tools/sp.mjs intake "<запрос дословно>"`
    (при неоднозначности классификации CLI вернёт код 3 и два варианта — выбери вместе с человеком
    и повтори с `--kind`).
 4. **Маршрут.** Покажи человеку `next:` из созданной записи `journal/intake/<ID>.md` в виде
@@ -33,10 +33,10 @@
 
 | Где вы | Путь к CLI | Журнал входа |
 |--------|------------|--------------|
-| проект с установленной фабрикой | `specproof/SEED/sp-tools/sp.mjs` | `specproof/OUTPUT/` |
-| сам репозиторий фабрики (корень канона) | `SEED/sp-tools/sp.mjs` | `.specproof-work/` |
+| проект с установленной фабрикой | `witness-done/SEED/sp-tools/sp.mjs` | `witness-done/OUTPUT/` |
+| сам репозиторий фабрики (корень канона) | `SEED/sp-tools/sp.mjs` | `.witness-done-work/` |
 
-Префикс `specproof/` — это `<FACTORY_PATH>`, а не часть имени команды. В корне канона прогона
+Префикс `witness-done/` — это `<FACTORY_PATH>`, а не часть имени команды. В корне канона прогона
 нет, поэтому `next:` ведёт на правку канона и `./validate.sh`, а не на `PIPELINE/00`.
 
 ## Запреты

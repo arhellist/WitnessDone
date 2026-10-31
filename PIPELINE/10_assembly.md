@@ -7,8 +7,8 @@ Staff engineer на приёмке. Код продукта не писать. �
 ## Вход
 
 - Весь `OUTPUT/**`
-- `@specproof/TEMPLATES/start-here.md`
-- `@specproof/VERSION`
+- `@witness-done/TEMPLATES/start-here.md`
+- `@witness-done/VERSION`
 - catalogs: language, stack, completeness, cicd-environments, design-input, **business-goals**, **typing-and-tests**, **verification-tax**, **contour-smoke**, **agent-harness**, **context-rag**, **code-comments**
 - `OUTPUT/docs/07_module_plan.md`, `07_conflicts.md`
 - `OUTPUT/roadmaps/coverage-matrix.md`
@@ -131,7 +131,7 @@ Staff engineer на приёмке. Код продукта не писать. �
 
 ### 7. `OUTPUT/docs/feedback.md` (**обязательно**)
 
-По шаблону `@specproof/TEMPLATES/feedback.md`. Это **обратная связь человеку** после полного прогона:
+По шаблону `@witness-done/TEMPLATES/feedback.md`. Это **обратная связь человеку** после полного прогона:
 
 - готов ли проект к разработке (можно ли стартовать D01);
 - исчерпывающий ли комплект промпт-документации (analysis → specs → D → tests → tooling → coverage);
@@ -153,7 +153,7 @@ Staff engineer на приёмке. Код продукта не писать. �
 
 ### 9. `OUTPUT/docs/exit-criteria.md` (E1…E90)
 
-По шаблону `@specproof/TEMPLATES/exit-criteria.md`: каждый критерий — наблюдаемое поведение, у каждого
+По шаблону `@witness-done/TEMPLATES/exit-criteria.md`: каждый критерий — наблюдаемое поведение, у каждого
 есть способ проверки и доказательство. Отсутствие файла — **BLOCKER** для перехода в Brownfield.
 Финальная проверка полноты из шага 10 обязана подтвердить, что покрытие без пропусков, у каждого
 задания есть материалы и план проверок, а у каждого среза — способ проверки.

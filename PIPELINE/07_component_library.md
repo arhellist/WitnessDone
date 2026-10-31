@@ -12,11 +12,11 @@
 
 ## Вход
 
-- ТЗ §11, analysis, `@specproof/README.md` (категории)
-- `@specproof/PROFILES.md`
-- `@specproof/LIBRARY/*/SPEC.md` (читать на месте)
-- `@specproof/catalogs/stack-policy.md`
-- `@specproof/catalogs/language-policy.md`
+- ТЗ §11, analysis, `@witness-done/README.md` (категории)
+- `@witness-done/PROFILES.md`
+- `@witness-done/LIBRARY/*/SPEC.md` (читать на месте)
+- `@witness-done/catalogs/stack-policy.md`
+- `@witness-done/catalogs/language-policy.md`
 
 ## Правило
 

@@ -161,7 +161,7 @@ AGENTS.local.md
 
 # --- Witness Done: служебные каталоги ---
 .sp-cache/
-.specproof-work/
+.witness-done-work/
 
 # nested git history backups (do not upload)
 .git.nested-bak/

@@ -137,7 +137,7 @@
 - methodology-architecture — опорный канон
 - meta-prompt-generator — если нужно сгенерировать новый модуль
 
-Свой модуль: `LIBRARY/<id>/SPEC.md` (каталог и правила — в `specproof/README.md`, секция LIBRARY) или опиши здесь:
+Свой модуль: `LIBRARY/<id>/SPEC.md` (каталог и правила — в `witness-done/README.md`, секция LIBRARY) или опиши здесь:
 - [ ] …
 
 ## 12. Критерии приёмки v1
@@ -149,6 +149,6 @@
 
 ## 13. Свободные заметки / ссылки
 
-Профиль (см. `specproof/PROFILES.md`): …
+Профиль (см. `witness-done/PROFILES.md`): …
 
 …

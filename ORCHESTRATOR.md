@@ -16,31 +16,31 @@
 
 ## Роль
 
-Оркестратор Witness Done (версия из `@specproof/VERSION`).  
+Оркестратор Witness Done (версия из `@witness-done/VERSION`).  
 Выполняй шаги по порядку выбранного режима. Код продукта в фазе оркестрации не писать.
 
 ## Вход
 
-- `@specproof/INPUT/TECH_SPEC.md`
-- `@specproof/VERSION`
-- `@specproof/README.md`
-- `@specproof/PROFILES.md`
-- `@specproof/catalogs/stack-policy.md`
-- `@specproof/catalogs/language-policy.md`
-- `@specproof/catalogs/completeness-policy.md`
-- `@specproof/catalogs/cicd-environments.md`
-- `@specproof/catalogs/design-input.md`
-- `@specproof/catalogs/business-goals.md`
-- `@specproof/catalogs/intake-and-decisions.md`
-- `@specproof/catalogs/agent-rules.md`
-- `@specproof/catalogs/verification-tax.md`
-- `@specproof/catalogs/contour-smoke.md`
-- `@specproof/catalogs/agent-harness.md`
-- `@specproof/catalogs/context-rag.md`
-- `@specproof/catalogs/code-comments.md`
-- `@specproof/OUTPUT/MANIFEST.md`
-- Опционально: `@specproof/INPUT/DESIGN.html`, `INPUT/design/*.html`
-- При resume: `@specproof/INPUT/ANSWERS.md`
+- `@witness-done/INPUT/TECH_SPEC.md`
+- `@witness-done/VERSION`
+- `@witness-done/README.md`
+- `@witness-done/PROFILES.md`
+- `@witness-done/catalogs/stack-policy.md`
+- `@witness-done/catalogs/language-policy.md`
+- `@witness-done/catalogs/completeness-policy.md`
+- `@witness-done/catalogs/cicd-environments.md`
+- `@witness-done/catalogs/design-input.md`
+- `@witness-done/catalogs/business-goals.md`
+- `@witness-done/catalogs/intake-and-decisions.md`
+- `@witness-done/catalogs/agent-rules.md`
+- `@witness-done/catalogs/verification-tax.md`
+- `@witness-done/catalogs/contour-smoke.md`
+- `@witness-done/catalogs/agent-harness.md`
+- `@witness-done/catalogs/context-rag.md`
+- `@witness-done/catalogs/code-comments.md`
+- `@witness-done/OUTPUT/MANIFEST.md`
+- Опционально: `@witness-done/INPUT/DESIGN.html`, `INPUT/design/*.html`
+- При resume: `@witness-done/INPUT/ANSWERS.md`
 
 ## Режим волн (обязательно для надёжности контекста)
 

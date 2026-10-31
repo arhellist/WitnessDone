@@ -7,9 +7,9 @@
 Каждый запрос (задача, вопрос, доработка) проходит три шага, до любой правки кода:
 
 ```bash
-node specproof/SEED/sp-tools/sp.mjs status   # где стоит проект
-node specproof/SEED/sp-tools/sp.mjs intake "<запрос дословно>"   # запись входа
-node specproof/SEED/sp-tools/sp.mjs next     # маршрут
+node witness-done/SEED/sp-tools/sp.mjs status   # где стоит проект
+node witness-done/SEED/sp-tools/sp.mjs intake "<запрос дословно>"   # запись входа
+node witness-done/SEED/sp-tools/sp.mjs next     # маршрут
 ```
 
 - Запись входа: `journal/intake/<YYYYMMDD-HHMM>-<slug>.md` — запрос цитатой, снимок состояния,
