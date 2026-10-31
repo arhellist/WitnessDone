@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>DESIGN example — замени на свой макет</title>
+  <style>
+    :root {
+      --color-bg: #f6f3ee;
+      --color-surface: #ffffff;
+      --color-text: #1a1a1a;
+      --color-accent: #0b6e4f;
+      --font-sans: "Georgia", "Times New Roman", serif;
+      --radius-md: 4px;
+      --space-unit: 8px;
+    }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      background: var(--color-bg);
+      color: var(--color-text);
+    }
+    header {
+      padding: calc(var(--space-unit) * 3);
+      background: var(--color-surface);
+      border-bottom: 1px solid #ddd;
+    }
+    .brand { font-size: 1.75rem; letter-spacing: 0.02em; }
+    main { padding: calc(var(--space-unit) * 4); max-width: 720px; }
+    .card {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: calc(var(--space-unit) * 3);
+      border: 1px solid #e2e2e2;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: calc(var(--space-unit) * 2);
+      padding: calc(var(--space-unit) * 1.5) calc(var(--space-unit) * 3);
+      background: var(--color-accent);
+      color: #fff;
+      text-decoration: none;
+      border-radius: var(--radius-md);
+    }
+  </style>
+</head>
+<body>
+  <header><div class="brand">Example Brand</div></header>
+  <main>
+    <div class="card">
+      <h1>Пример экрана</h1>
+      <p>Положи свой HTML в <code>INPUT/DESIGN.html</code> или <code>INPUT/design/</code>. Фабрика извлечёт токены в <code>OUTPUT/docs/design-notes.md</code>.</p>
+      <a class="btn" href="#">Primary CTA</a>
+    </div>
+  </main>
+</body>
+</html>

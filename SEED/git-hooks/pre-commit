@@ -1,0 +1,33 @@
+#!/usr/bin/env sh
+# Witness Done pre-commit — проверка входа на staged-файлах.
+#
+# Установка (шаг 00 или 08):
+#   cp SEED/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# либо через общий каталог хуков:
+#   git config core.hooksPath .githooks
+#
+# Канон: catalogs/intake-and-decisions.md. Блокирует только реальные провалы
+# (нет AGENTS.md, рассинхрон адаптеров, изменённый файл вне PRODUCES, done без акта).
+set -e
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+
+CLI=""
+for cand in "$ROOT/scripts/sp-tools/sp.mjs" "$ROOT/specproof/SEED/sp-tools/sp.mjs" "$ROOT/SEED/sp-tools/sp.mjs"; do
+  if [ -f "$cand" ]; then
+    CLI="$cand"
+    break
+  fi
+done
+
+if [ -z "$CLI" ]; then
+  echo "pre-commit: sp.mjs не найден — проверка входа пропущена"
+  exit 0
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "pre-commit: node не найден — проверка входа пропущена"
+  exit 0
+fi
+
+exec node "$CLI" doctor --staged --root "$ROOT"

@@ -1,0 +1,6 @@
+# Оглавление журнала — производный вид: пересобирается sp journal --index.
+# union убирает конфликт маркеров при мерже двух веток с решениями.
+journal/decisions.md merge=union
+# progress.md собирается из roadmaps/progress.d/: union не даёт потерять строки при мерже
+progress.md merge=union
+roadmaps/progress.md merge=union

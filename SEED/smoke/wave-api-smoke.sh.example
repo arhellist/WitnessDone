@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# wave-api-smoke.sh.example — Contour 2 API smoke (без UI)
+# Witness Done (правило действует с v1.10) | catalogs/contour-smoke.md
+#
+# На шаге 08 скопировать в scripts/smoke/wave-api-smoke.sh (или wave-<group>.sh),
+# подставить BASE_URL, TOKEN, paths из openapi. Вызывать после закрытия split_group.
+#
+# Каждая проверка помечается номером фразы приёмки (Axx.k) — из OUTPUT/01_contract.md.
+# Без меток прогон ничего не доказывает: sp-verify --gate product-smoke отвергнет скрипт.
+set -euo pipefail
+
+BASE_URL="${BASE_URL:-http://localhost:3000}"
+TOKEN="${TOKEN:-}"
+HDR_AUTH=()
+if [[ -n "$TOKEN" ]]; then
+  HDR_AUTH=(-H "Authorization: Bearer ${TOKEN}")
+fi
+
+pass=0
+fail=0
+
+# $1 — номер фразы приёмки (Axx.k), $2 — метод, $3 — путь, $4 — ожидаемый код
+check() {
+  local id="$1" method="$2" path="$3" expect="${4:-200}"
+  local code
+  code=$(curl -sS -o /tmp/sp-wave-body.json -w "%{http_code}" \
+    -X "$method" "${HDR_AUTH[@]}" -H "Content-Type: application/json" \
+    "${BASE_URL}${path}" || true)
+  if [[ "$code" == "$expect" ]]; then
+    echo "  OK  $id $method $path → $code"
+    pass=$((pass + 1))
+  else
+    echo "  FAIL $id $method $path → $code (want $expect)"
+    fail=$((fail + 1))
+  fi
+}
+
+echo "=== wave API smoke @ $BASE_URL ==="
+
+# Плейсхолдеры — заменить на фразы и ops волны (номера из 01_contract.md)
+check A01.1 GET "/health" 200
+check A01.2 GET "/metrics" 200
+# check A03.1 POST "/api/v1/..." 201   # publish → debit
+# check A04.1 POST "/api/v1/..." 201   # paid bid → quota
+# check A05.1 POST "/api/v1/..." 402   # insufficient funds
+# check A06.1 GET  "/api/v1/..." 200
+# check A10.1 POST "/api/v1/..." 200   # idempotent retry
+
+echo
+echo "PASS=$pass FAIL=$fail"
+[[ "$fail" -eq 0 ]] || exit 1

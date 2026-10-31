@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "source": "AGENTS.md",
+  "generated_marker": "<!-- GENERATED from AGENTS.md — правки вносить в AGENTS.md, не сюда -->",
+  "protocol_start": "<!-- SP-ENTRY-PROTOCOL v1 -->",
+  "protocol_end": "<!-- /SP-ENTRY-PROTOCOL -->",
+  "targets": [
+    {
+      "id": "cursorrules",
+      "path": ".cursorrules",
+      "mode": "copy",
+      "required": true,
+      "note": "Cursor (legacy), Cline, Zed читают его раньше AGENTS.md — поэтому полная копия, не указатель"
+    },
+    {
+      "id": "cursor-mdc",
+      "path": ".cursor/rules/specproof.mdc",
+      "mode": "wrapped",
+      "required": true,
+      "frontmatter": {
+        "description": "Witness Done: конституция проекта, протокол входа и правила приёмки",
+        "alwaysApply": true
+      },
+      "note": "Cursor Project Rules; alwaysApply=true, чтобы правило жило в каждом чате"
+    },
+    {
+      "id": "claude",
+      "path": "CLAUDE.md",
+      "mode": "include",
+      "required": true,
+      "template": "templates/CLAUDE.md.tpl",
+      "note": "Claude Code игнорирует AGENTS.md, если существует CLAUDE.md — файл обязателен"
+    },
+    {
+      "id": "gemini",
+      "path": "GEMINI.md",
+      "mode": "copy",
+      "required": true,
+      "note": "Gemini CLI читает AGENTS.md только через context.fileName"
+    },
+    {
+      "id": "copilot",
+      "path": ".github/copilot-instructions.md",
+      "mode": "copy",
+      "required": true,
+      "note": "Repository-wide instructions для GitHub Copilot"
+    },
+    {
+      "id": "cline",
+      "path": ".clinerules/specproof.md",
+      "mode": "copy",
+      "required": true,
+      "note": "Cline Rules"
+    },
+    {
+      "id": "devin",
+      "path": ".devin/rules/specproof.md",
+      "mode": "wrapped",
+      "required": true,
+      "frontmatter": {
+        "trigger": "always_on"
+      },
+      "note": "Devin Desktop (бывший Windsurf); .windsurf/rules не дублируем — это fallback того же инструмента"
+    },
+    {
+      "id": "junie",
+      "path": ".junie/guidelines.md",
+      "mode": "copy",
+      "required": false,
+      "note": "Junie guidelines (опционально)"
+    },
+    {
+      "id": "kiro",
+      "path": ".kiro/steering/specproof.md",
+      "mode": "wrapped",
+      "required": false,
+      "frontmatter": {
+        "inclusion": "always"
+      },
+      "note": "Kiro steering (опционально)"
+    },
+    {
+      "id": "aider",
+      "path": ".aider.conf.yml",
+      "mode": "static",
+      "required": false,
+      "content": "read:\n  - AGENTS.md\n",
+      "note": "Aider не читает AGENTS.md сам — только через read"
+    },
+    {
+      "id": "cmd-cursor",
+      "path": ".cursor/commands/sp.md",
+      "mode": "source",
+      "source": "SEED/commands/sp.md",
+      "required": true,
+      "note": "Слэш-команда /sp в Cursor"
+    },
+    {
+      "id": "cmd-claude",
+      "path": ".claude/commands/sp.md",
+      "mode": "source",
+      "source": "SEED/commands/sp.md",
+      "required": false,
+      "note": "Слэш-команда /sp в Claude Code"
+    },
+    {
+      "id": "cmd-gemini",
+      "path": ".gemini/commands/sp.toml",
+      "mode": "toml",
+      "source": "SEED/commands/sp.md",
+      "template": "templates/sp.toml.tpl",
+      "required": false,
+      "note": "Слэш-команда /sp в Gemini CLI"
+    }
+  ],
+  "forbidden": [
+    {
+      "path": ".rules",
+      "reason": "Zed читает .rules раньше AGENTS.md и берёт только первый найденный файл — файл затенил бы правила"
+    },
+    {
+      "path": ".windsurfrules",
+      "reason": "устаревший формат; .devin/rules/specproof.md покрывает тот же инструмент"
+    }
+  ],
+  "tools_without_slash": [
+    "codex",
+    "copilot",
+    "cline",
+    "devin",
+    "junie",
+    "kiro",
+    "aider"
+  ]
+}

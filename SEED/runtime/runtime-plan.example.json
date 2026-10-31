@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "stack": ["node", "typescript", "postgres"],
+  "up": [
+    {
+      "id": "db",
+      "cmd": "docker compose up -d db",
+      "ready": { "type": "cmd", "cmd": "docker compose exec -T db pg_isready -U app", "timeout_s": 60 }
+    },
+    {
+      "id": "api",
+      "cmd": "npm run dev:api &",
+      "ready": { "type": "http", "url": "http://localhost:3000/health", "expect": 200, "timeout_s": 90 }
+    }
+  ],
+  "seed": [{ "id": "test-user", "cmd": "npm run db:seed:test", "idempotent": true }],
+  "down": [{ "cmd": "docker compose down -v" }],
+  "verify": [
+    {
+      "acceptance": "A01.1",
+      "cmd": "bash scripts/smoke/A01.1-health.sh",
+      "expect_exit": 0,
+      "artifacts": ["OUTPUT/evidence/trace/A01.1-health.json"]
+    },
+    {
+      "acceptance": "A03.1",
+      "cmd": "bash scripts/smoke/A03.1-publish-debit.sh",
+      "expect_exit": 0,
+      "artifacts": ["OUTPUT/evidence/trace/A03.1-charge.json"]
+    },
+    {
+      "acceptance": "A05.1",
+      "cmd": "bash scripts/smoke/A05.1-insufficient.sh",
+      "expect_exit": 0
+    },
+    {
+      "acceptance": "A07.1",
+      "na": "экран тарифов ЛК проверяется в playwright-проекте заказчика",
+      "reason": "фабрика не поднимает браузер: UI-e2e живёт в CI проекта"
+    }
+  ]
+}

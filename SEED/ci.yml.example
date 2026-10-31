@@ -1,0 +1,83 @@
+# GitHub Actions CI (SEED) — Witness Done (шаблон, переносится на шаге 08)
+# Скопировать на шаге 08 в PROJECT_ROOT/.github/workflows/ci.yml
+# Канон: catalogs/cicd-environments.md + catalogs/verification-tax.md
+#
+# Пример написан под JS/TS-стек (npm) — это иллюстрация, а не требование:
+# для другого стека сохраняются правила ниже, а сами команды берутся из
+# OUTPUT/tooling/verify-commands.md (go test, mvn verify, pytest, phpunit, …).
+#
+# Правила:
+# - Локальный pre_ci (sp-verify) — первая приёмка; CI — второй контур
+# - PR: lint + typecheck + test — без deploy; без soft-fail на app после D01
+# - staging/prod: отдельные workflow + pre_release gate
+
+```yaml
+name: CI
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+
+jobs:
+  lint-and-typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc --noEmit
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  # Вход и правила агента: протокол, адаптеры IDE, журнал решений
+  entry-and-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Адаптеры IDE синхронны с AGENTS.md
+        run: node scripts/sp-tools/sp.mjs rules --check
+      - name: Вход, решения и акты (strict)
+        run: node scripts/sp-tools/sp.mjs doctor --strict
+
+  # Сверка done ↔ evidence (progress.md против OUTPUT/evidence/Dxx.json)
+  evidence-gate:
+    runs-on: ubuntu-latest
+    needs: entry-and-rules
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node scripts/sp-tools/sp-verify.mjs --gate evidence-sync
+
+  # НЕ включать auto-deploy в production на push.
+  # deploy-staging:
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #   needs: [lint-and-typecheck, test]
+  #   runs-on: ubuntu-latest
+  #   environment: staging
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Require pre_release locally before promote
+  #       run: echo "see OUTPUT/tooling/harness.md — sp-verify --gate pre_release"
+```
+
+Адаптируй под монорепо и стек (Go/Java jobs — по architecture).
+Полный порядок migrate → api → web — в `OUTPUT/tooling/cicd-and-environments.md` + `deploy.md`.

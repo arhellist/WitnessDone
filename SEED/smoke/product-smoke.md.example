@@ -1,0 +1,46 @@
+# Product smoke — полный контур (staging / pre-release)
+
+> Сгенерировано из `SEED/smoke/product-smoke.md.example` (Witness Done (правило действует с v1.10)).  
+> Канон: `catalogs/contour-smoke.md`. Подставь реальные ops из openapi проекта.
+
+## Когда
+
+- Перед `sp-verify --gate pre_release` promote  
+- После деплоя на **staging**  
+- Не на каждый D (для пачек — `scripts/smoke/wave-*.sh`)
+
+## Предусловия
+
+- [ ] staging API/web подняты  
+- [ ] migrate применены  
+- [ ] тестовый пользователь + баланс/квоты подготовлены  
+- [ ] внешний OLAP/PSP: живой или явно marked N/A с риском  
+
+## Сценарии (заполни paths)
+
+Колонка «Фраза» — номер `Axx.k` из `01_contract.md`. Каждая строка обязана назвать фразу: без меток
+скрипт отвергается `sp-verify --gate product-smoke`, а акт не говорит, что именно подтверждено.
+
+| Фраза | Contour | Steps | Expect |
+|-------|---------|-------|--------|
+| A01.1 | health | `GET /health`, `GET /metrics` | 200 |
+| A02.1 | pricing | `GET {{PRICING_PATH}}` | тарифы/квоты без секретов |
+| A03.1 | publish→debit | publish order/resource → ledger debit | баланс −fee, reason стабилен |
+| A04.1 | bid/quota | free bid → paid bid | лимит/списание верны |
+| A05.1 | insufficient | publish/bid без средств | 4xx, баланс не отрицательный |
+| A06.1 | vacancy→overage | publish vacancy → applications → overage | debit **owner**, never applicant |
+| A07.1 | pricing UI | открыть экран тарифов ЛК | числа = API |
+| A08.1 | analytics | overview / rollup read | 200, без PII leak |
+| A09.1 | admin sanity | read-only admin metrics (если in scope) | 200 / 403 по роли |
+| A10.1 | idempotent | повтор publish/bid с тем же ключом | без двойного списания |
+
+## Внешние сторы
+
+| Store | CI | Staging smoke |
+|-------|----|---------------|
+| ClickHouse / OLAP | memory/fixture OK | **живой** прогон обязателен если analytics in scope |
+| PSP / payments | sandbox | sandbox + 1 live-like path |
+
+## STOP
+
+Зафиксируй результат в чате/тикете. Fail любого P0-сценария → не promote.

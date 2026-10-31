@@ -1,0 +1,9 @@
+{
+  "repo": "arhellist/WitnessDone",
+  "branch": "main",
+  "version_path": "VERSION",
+  "protocol": "semver",
+  "note": "Источник версий для sp update. Меняется только здесь, в коде репозиторий не зашит.",
+  "preserve": ["INPUT/", "OUTPUT/", ".git/", ".sp-cache/"],
+  "applies_to": "canon"
+}

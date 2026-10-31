@@ -1,0 +1,27 @@
+# golangci-lint — SEED (backend Go)
+
+> PIPELINE/08 копирует в `PROJECT_ROOT/.golangci.yml`, если backend = Go.  
+> При Node/Java — этот файл в корень **не** класть.
+
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+
+linters-settings:
+  misspell:
+    locale: US
+
+run:
+  timeout: 5m
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
