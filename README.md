@@ -1,4 +1,4 @@
-# Witness Done (v1.29.0) — полное руководство по фабрике
+# Witness Done (v1.31.0) — полное руководство по фабрике
 
 <div align="center">
   <img src="logo.jpg" alt="Witness Done — фабрика спецификаций для AI-агентов" width="560">
@@ -537,10 +537,16 @@ node witness-done/SEED/sp-tools/sp.mjs next
 | Условие | `kind` | Маршрут |
 |---|---|---|
 | прогон не начат | `new` | `PIPELINE/00_bootstrap.md` |
-| есть незакрытый change | `change` | `R02 → R05` |
 | `D\d\d` + greenfield | `task` | `OUTPUT/prompts/Dxx_*.md` |
 | вопрос без глагола изменения | `question` | ответ + `sp decide` |
 | вопрос **и** глагол изменения | `exit 3` | человек выбирает `--kind` |
+| признак дефекта + принятое поведение есть | `bugfix` | `R02` с причиной в `proposal.md` §1 |
+| есть незакрытый change | `change` | `R02 → R05` |
+
+«Принятое поведение» — baseline (brownfield) или хотя бы одно `done` в `progress.md`; до первого
+принятого задания дефект — это просто не написанная работа. Заказ новой работы дефектом не
+считается: «добавь обработку ошибок 500» — `change`/`task`, «исправь ошибку» и «кнопка не
+работает» — `bugfix`. Сомнительный случай называется явно: `--kind bugfix`.
 
 Выбор, догадка, компромисс, конфликт контрактов — в журнал **до** кода:
 
@@ -673,7 +679,7 @@ witness-done/
 Отсюда единственное правило обновления: **заменить канон, сохранить прогон**. Распаковать архив
 поверх нельзя — сотрётся `INPUT/TECH_SPEC.md`, `ANSWERS.md` и весь `OUTPUT/`.
 
-Версия — одна строка в `VERSION` (сейчас `1.29.0`). Проверка обновления не скачивает фабрику, она
+Версия — одна строка в `VERSION` (сейчас `1.31.0`). Проверка обновления не скачивает фабрику, она
 сравнивает эту строку с версией в репозитории из `SEED/update.json`:
 
 ```bash
@@ -907,8 +913,8 @@ node witness-done/SEED/sp-tools/sp.mjs doctor --strict
 - реальные конфиги линтера, строгие типы, `no any`;
 - конвейер: зависимости → линт → типы → тесты → дымовой прогон;
 - окружения: что где запускается, переменные, порты, порядок деплоя;
-- **скопировать CLI:** `SEED/sp-tools/` → `PROJECT_ROOT/scripts/sp-tools/` (или оставить
-  `witness-done/SEED/sp-tools` и указать путь в `OUTPUT/tooling/`);
+- CLI уже стоит в `witness-done/SEED/sp-tools/`; копировать в `scripts/sp-tools/` не нужно (DEC-034),
+  путь фиксируется в `OUTPUT/tooling/`;
 - `OUTPUT/tooling/verify-commands.md` — команды lint/typecheck/test, wave smoke vs product-smoke;
 - `OUTPUT/tooling/harness.md` — цикл работы агента, resume-фразы, запрет `done` без акта;
 - смок-шаблоны из `SEED/smoke/` материализуются в `scripts/smoke/` и `OUTPUT/docs/runbooks/`.
@@ -1156,7 +1162,7 @@ node witness-done/SEED/sp-tools/sp.mjs doctor --strict
 1. **Взять задачу:** следующий по порядку `OUTPUT/prompts/Dxx_….md`.
 2. **Код + тесты:** строго по стеку (`catalogs/stack-policy.md`), подробные комментарии на русском
    (`catalogs/code-comments.md`), тест на каждую фразу.
-3. **Верификация:** `node scripts/sp-tools/sp-verify.mjs --d Dxx --gate pre_ci`.
+3. **Верификация:** `node witness-done/SEED/sp-tools/sp-verify.mjs --d Dxx --gate pre_ci`.
 4. **Статус:** `done` только при коде возврата 0, `tax_pass: true` и непустом `acceptance_ids`
    (для `L1+`), иначе `needs_rework`.
 5. **Стоп:** следующий D не начинается. «Доделаю потом» превращается в каскад из трёх задач на
@@ -1510,29 +1516,29 @@ CI — **второй** прогон unit-контура на чистой ма�
 
 ### 7.10 CLI `sp-tools`
 
-Из корня проекта (после шага 08 CLI скопирован в `scripts/sp-tools/`; иначе — прямо из
-`witness-done/SEED/sp-tools/`). Что делает каждая команда и что значит каждый аргумент:
+Из корня проекта CLI всегда доступен по `witness-done/SEED/sp-tools/` (копия в `scripts/sp-tools/`
+не нужна — DEC-034). Что делает каждая команда и что значит каждый аргумент:
 
 ```bash
 # --- вход и маршрут ---------------------------------------------------------
 # status: где стоит проект. Без аргументов.
-node scripts/sp-tools/sp.mjs status                    # где стоит проект
+node witness-done/SEED/sp-tools/sp.mjs status                    # где стоит проект
 
 # intake: запись входа. "…" — запрос дословно (обязателен).
-node scripts/sp-tools/sp.mjs intake "Добавь экспорт отчёта в CSV"
+node witness-done/SEED/sp-tools/sp.mjs intake "Добавь экспорт отчёта в CSV"
 
-node scripts/sp-tools/sp.mjs next                      # маршрут из последней записи
+node witness-done/SEED/sp-tools/sp.mjs next                      # маршрут из последней записи
 
 # decide: решение в журнал. "…" — формулировка (обязателен),
 #         --intake <ID> — к какой записи привязать.
-node scripts/sp-tools/sp.mjs decide "Экспорт только CSV" --intake <ID>
+node witness-done/SEED/sp-tools/sp.mjs decide "Экспорт только CSV" --intake <ID>
 
 # close: закрыть запись входа. <ID> — имя файла intake без .md,
 #        --ref <…> — DEC-001 | D01 | <change-id>.
-node scripts/sp-tools/sp.mjs close <ID> --ref DEC-001
+node witness-done/SEED/sp-tools/sp.mjs close <ID> --ref DEC-001
 
-node scripts/sp-tools/sp.mjs rules --sync              # адаптеры IDE из AGENTS.md
-node scripts/sp-tools/sp.mjs doctor --strict           # гейт входа; предупреждения = провал
+node witness-done/SEED/sp-tools/sp.mjs rules --sync              # адаптеры IDE из AGENTS.md
+node witness-done/SEED/sp-tools/sp.mjs doctor --strict           # гейт входа; предупреждения = провал
 
 # --- приёмка ----------------------------------------------------------------
 # --d D01          — задание из OUTPUT/prompts/ (для pre_ci обязателен)
@@ -1541,25 +1547,25 @@ node scripts/sp-tools/sp.mjs doctor --strict           # гейт входа; п
 # --batch <n>      — номер пачки заданий (≤5 за раз)
 # --change <id>    — пакет изменения spec-state/changes/<id>/
 # --budget-min <n> — бюджет прогона плана рантайма, минуты (по умолчанию 30)
-node scripts/sp-tools/sp-verify.mjs --d D01 --gate pre_ci          # принять задание D01
-node scripts/sp-tools/sp-verify.mjs --gate acceptance [--d D01]     # связь «фраза ↔ тест» + test-plan
-node scripts/sp-tools/sp-verify.mjs --gate d-prompt-quality --batch 1  # качество пачки №1
-node scripts/sp-tools/sp-verify.mjs --gate self-audit               # самопроверка 10b
-node scripts/sp-tools/sp-verify.mjs --gate baseline                 # базовый набор R01
-node scripts/sp-tools/sp-verify.mjs --gate product-smoke            # смоук продукта
-node scripts/sp-tools/sp-verify.mjs --gate runtime-plan             # план подъёма/проверки: статика
-node scripts/sp-tools/sp-verify.mjs --gate runtime                  # подъём → проверки → teardown
-node scripts/sp-tools/sp-verify.mjs --gate pre_release              # готовность к релизу
-node scripts/sp-tools/sp-verify.mjs --gate evidence-sync            # сверка progress ↔ evidence
-node scripts/sp-tools/sp-verify.mjs --change <id> --gate change     # принять изменение
+node witness-done/SEED/sp-tools/sp-verify.mjs --d D01 --gate pre_ci          # принять задание D01
+node witness-done/SEED/sp-tools/sp-verify.mjs --gate acceptance [--d D01]     # связь «фраза ↔ тест» + test-plan
+node witness-done/SEED/sp-tools/sp-verify.mjs --gate d-prompt-quality --batch 1  # качество пачки №1
+node witness-done/SEED/sp-tools/sp-verify.mjs --gate self-audit               # самопроверка 10b
+node witness-done/SEED/sp-tools/sp-verify.mjs --gate baseline                 # базовый набор R01
+node witness-done/SEED/sp-tools/sp-verify.mjs --gate product-smoke            # смоук продукта
+node witness-done/SEED/sp-tools/sp-verify.mjs --gate runtime-plan             # план подъёма/проверки: статика
+node witness-done/SEED/sp-tools/sp-verify.mjs --gate runtime                  # подъём → проверки → teardown
+node witness-done/SEED/sp-tools/sp-verify.mjs --gate pre_release              # готовность к релизу
+node witness-done/SEED/sp-tools/sp-verify.mjs --gate evidence-sync            # сверка progress ↔ evidence
+node witness-done/SEED/sp-tools/sp-verify.mjs --change <id> --gate change     # принять изменение
 
 # --- контекст ---------------------------------------------------------------
 # --reindex                 — перестроить индекс OUTPUT/ и spec-state/
 # --d D03 --validate        — проверить существующий pack (не создаёт его)
 # --query "…" --out <path>  — собрать pack по запросу в файл
-node scripts/sp-tools/sp-retrieve.mjs --reindex                     # перестроить индекс
-node scripts/sp-tools/sp-retrieve.mjs --d D03 --validate            # проверить pack для D03
-node scripts/sp-tools/sp-retrieve.mjs --query "JWT auth middleware" --out OUTPUT/context/packs/P-draft.md  # собрать pack
+node witness-done/SEED/sp-tools/sp-retrieve.mjs --reindex                     # перестроить индекс
+node witness-done/SEED/sp-tools/sp-retrieve.mjs --d D03 --validate            # проверить pack для D03
+node witness-done/SEED/sp-tools/sp-retrieve.mjs --query "JWT auth middleware" --out OUTPUT/context/packs/P-draft.md  # собрать pack
 ```
 
 - `sp` — вход и маршрут: `status`/`intake`/`next`/`decide`/`close`, генерация и проверка адаптеров
@@ -1812,7 +1818,7 @@ node <FACTORY_PATH>/SEED/sp-tools/sp.mjs <подкоманда> [аргумен�
 
 | Флаг | Значение | По умолчанию |
 |------|----------|--------------|
-| `--root <путь>` | Корень проекта: откуда читаются `INPUT/`, `OUTPUT/`, `spec-state/` | текущий каталог |
+| `--root <путь>` | Корень проекта: откуда читаются `INPUT/`, `spec-state/` и код; `OUTPUT/` ищется в `FACTORY_PATH` (не в `--root`) | текущий каталог |
 | `--factory <путь>` | Корень канона: откуда берутся `SEED/`, `TEMPLATES/`, `catalogs/` | `<root>/witness-done`, иначе каталог скрипта |
 | `--json` | Машинный вывод вместо человекочитаемого | выкл. |
 | `--help`, `-h` | Справка и выход с кодом `0` | — |
@@ -2370,7 +2376,7 @@ node witness-done/SEED/sp-tools/sp-retrieve.mjs --query "JWT auth middleware" \
 | Где | Как выглядит команда |
 |-----|----------------------|
 | Проект с фабрикой в `witness-done/` | `node witness-done/SEED/sp-tools/sp.mjs …` |
-| Проект после шага 08 (CLI скопирован) | `node scripts/sp-tools/sp.mjs …` |
+| Проект со старой копией CLI в `scripts/sp-tools/` | `node witness-done/SEED/sp-tools/sp.mjs …` (копия допустима, но не нужна — DEC-034) |
 | Корень канона (этот репозиторий) | `node SEED/sp-tools/sp.mjs …` |
 | Папка фабрики называется иначе | `node <путь>/SEED/sp-tools/sp.mjs … --factory <путь>` |
 
@@ -2383,7 +2389,7 @@ node witness-done/SEED/sp-tools/sp-retrieve.mjs --query "JWT auth middleware" \
 | Флаг | С какой подкомандой | Что значит |
 |------|--------------------|------------|
 | `--help`, `-h` | любая | Справка и выход с кодом `0` |
-| `--root <путь>` | любая | Корень проекта: откуда читаются `INPUT/`, `OUTPUT/`, `spec-state/`. По умолчанию текущий каталог |
+| `--root <путь>` | любая | Корень проекта: откуда читаются `INPUT/`, `spec-state/` и код. `OUTPUT/` ищется в `FACTORY_PATH`, а не в `--root`. По умолчанию текущий каталог |
 | `--factory <путь>` | любая | Корень канона: откуда берутся `SEED/`, `TEMPLATES/`, `catalogs/`. По умолчанию `<root>/witness-done`, иначе каталог скрипта |
 | `--json` | `status`, `doctor`, `update` | Машинный вывод вместо человекочитаемого |
 | `--kind <new\|question\|change\|task\|bugfix>` | `intake` | Явная классификация запроса; нужна при `exit 3` или когда тип известен человеку |

@@ -42,6 +42,34 @@ export function sha256(data) {
   return crypto.createHash('sha256').update(data).digest('hex');
 }
 
+/** Корень git-репозитория, если git доступен и каталог внутри рабочего дерева. */
+export function gitToplevel(dir) {
+  const r = spawnSync('git', ['rev-parse', '--show-toplevel'], { cwd: dir, encoding: 'utf8' });
+  if (r.status !== 0) return null;
+  const out = (r.stdout || '').trim();
+  return out || null;
+}
+
+/**
+ * PROJECT_ROOT по умолчанию (DEC-033).
+ *
+ * CLI стоит либо в корне проекта (`node witness-done/SEED/...`), либо в самой фабрике
+ * (`cd witness-done && node SEED/...`). Раньше sp-verify брал `cwd` и из каталога фабрики
+ * молча не находил файлы `PRODUCES` — это выглядело как провал приёмки, а не как ошибка пути.
+ * Порядок: git-корень (он и есть проект) → имя папки фабрики `witness-done` → `cwd`.
+ * Корень канона (git-корень совпал с фабрикой) остаётся собой.
+ */
+export function resolveProjectRoot(cwd, factory) {
+  const f = path.resolve(factory);
+  const top = gitToplevel(cwd);
+  if (top) {
+    const t = path.resolve(top);
+    return t === f ? f : t;
+  }
+  if (path.basename(f) === 'witness-done') return path.dirname(f);
+  return cwd;
+}
+
 /**
  * Ярлыки неполноты: объём нельзя описывать «степенью готовности».
  * Канон: catalogs/completeness-policy.md («Запрет ярлыков неполноты»).
@@ -54,12 +82,17 @@ export const INCOMPLETENESS_LABELS = [
   { re: /(?:beta|бета)[-\s]?(?:верси|этап|релиз)|(?:beta|бета)\s+как\s+/i, why: 'beta как объём' },
   { re: /\bv0\.\d+\b\s*(?:верси|этап|релиз|как)/i, why: 'v0.x как объём' },
   { re: /пока\s+без|без\s+[^.,;\n]{0,30}\s+на\s+первом\s+этапе/i, why: '«пока без…»' },
-  { re: /упрощ[её]нн\w*\s+верси/i, why: '«упрощённая версия»' },
+  /**
+   * Кириллица не входит в `\w` (DEC-036): `упрощ[её]нн\w*\s+верси` не совпадал с
+   * «упрощённая версия», то есть ярлык неполноты по-русски проходил гейт качества.
+   */
+  { re: /упрощ[её]нн[\wА-Яа-яЁё-]*\s+верси/i, why: '«упрощённая версия»' },
   { re: /\bv1\s+(без|как\s+статус)/i, why: 'v1 как статус' },
 ];
 
 /** Строка опровергает ярлык (запрет/отказ/вне скоупа) — это не нарушение. */
-const LABEL_REFUTED = /запрещ|недопустим|out\s+of\s+scope|improvement-backlog|\bне\s+(«|")?(mvp|poc|beta)/i;
+const LABEL_REFUTED =
+  /запрещ|недопустим|out\s+of\s+scope|improvement-backlog|(?:^|[^\wА-Яа-яЁё])не\s+(«|")?(mvp|poc|beta)/i;
 
 /**
  * Находит ярлыки неполноты в тексте. Возвращает список `{line, why, text}`.

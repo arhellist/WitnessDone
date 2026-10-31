@@ -1,7 +1,7 @@
 # Tasks: {{CHANGE_ID}} — {{TITLE}}
 
 > Статус: in_progress | completed
-> Валидация: `node scripts/sp-tools/sp-verify.mjs --change {{CHANGE_ID}} --gate change`
+> Валидация: `node witness-done/SEED/sp-tools/sp-verify.mjs --change {{CHANGE_ID}} --gate change`
 > Правило: для прохождения шлюза верификации и архивации все задачи должны иметь статус `[x]`.
 
 > **Каждая задача привязана к утверждению** (`Axx.k` из ACCEPTANCE или `Rxx` — требование baseline /

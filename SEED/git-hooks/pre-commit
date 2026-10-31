@@ -13,7 +13,7 @@ set -e
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
 CLI=""
-for cand in "$ROOT/scripts/sp-tools/sp.mjs" "$ROOT/witness-done/SEED/sp-tools/sp.mjs" "$ROOT/SEED/sp-tools/sp.mjs"; do
+for cand in "$ROOT/witness-done/SEED/sp-tools/sp.mjs" "$ROOT/SEED/sp-tools/sp.mjs" "$ROOT/scripts/sp-tools/sp.mjs"; do
   if [ -f "$cand" ]; then
     CLI="$cand"
     break

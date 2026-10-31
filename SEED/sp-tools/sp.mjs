@@ -50,11 +50,14 @@ const SUBCMDS = [
 ];
 const KINDS = ['new', 'question', 'change', 'task', 'bugfix'];
 
-/** Тексты из `TEMPLATES/decision-record.md`: пока они на месте, решение не считается оформленным. */
+/**
+ * Тексты из `TEMPLATES/decision-record.md`: пока они на месте, решение не считается оформленным.
+ * `Axx.k` в списке нет: это обычная ссылка на фразу приёмки, и решение вроде DEC-020
+ * («смоук обязан метить проверки номерами `Axx.k`») ловилось как незаполненное.
+ */
 const DECISION_PLACEHOLDERS = [
   'Что вынудило выбирать',
   'Что отвергли и почему',
-  'Axx.k',
   'Решение без подтверждения',
 ];
 
@@ -261,10 +264,15 @@ function help() {
   sp.mjs progress [--merge] [--check]
   sp.mjs feedback [--lite]
   sp.mjs rules --list | --sync [--targets id,id] | --check
-  sp.mjs doctor [--strict] [--staged] [--json]
+  sp.mjs doctor [--strict] [--staged] [--team] [--json]
   sp.mjs update [--json] [--offline] [--no-cache] [--timeout мс]
   sp.mjs verify <аргументы sp-verify>
   sp.mjs retrieve <аргументы sp-retrieve>
+
+  Общие флаги (для любой подкоманды):
+  --root <путь>      корень проекта (по умолчанию — текущий каталог)
+  --factory <путь>   папка фабрики (по умолчанию <root>/witness-done, иначе рядом с CLI)
+  --help             эта справка (код 0); без аргументов — она же с кодом 1
 
   status   — где стоит проект: MODE, шаг, активные changes, открытые записи входа, done без акта.
   intake   — запись входа journal/intake/<ID>.md с классификацией и маршрутом next:.
@@ -277,6 +285,9 @@ function help() {
   feedback — короткая обратная связь по готовности (--lite: три вопроса вместо шести секций).
   rules    — адаптеры правил IDE из AGENTS.md (SEED/agent-config/manifest.json).
   doctor   — проверки входа, правил, актов, journal, review и единственности ORCHESTRATOR.md.
+             --strict: предупреждения считаются провалом; --staged: только staged-файлы;
+             --team: командный режим — evidence_ref у done, дубли фрагментов progress.d,
+             устаревший review.
   update   — сравнить VERSION фабрики с версией в репозитории (SEED/update.json).
 
   Коды: 0 ok, 2 провал проверки (для update — есть новая версия), 3 нужен человек /
@@ -302,10 +313,10 @@ function outputDir(root, factory) {
     fs.existsSync(path.join(factory, 'catalogs')) &&
     !fs.existsSync(path.join(factory, 'OUTPUT', 'MANIFEST.md'));
   if (isCanon) return canonJournalDir(factory);
-  const a = path.join(factory, 'OUTPUT');
   const b = path.join(root, 'witness-done', 'OUTPUT');
-  if (fs.existsSync(a)) return a;
+  const a = path.join(factory, 'OUTPUT');
   if (fs.existsSync(b)) return b;
+  if (fs.existsSync(a)) return a;
   return a;
 }
 
@@ -669,7 +680,62 @@ function cmdStatus(args, outRoot) {
 // ---------------------------------------------------------------- intake
 
 const CHANGE_VERBS = /добав|уб(ер|ра)|измен|сдела|реализ|исправ|обнов|переимен|удал|созда|внедр|настро|почин|дополн|перенес|замен|связ|расшир|подключ|\badd\b|\bremove\b|\bimplement\b|\brefactor\b|\bfix\b|\bchange\b|\bupdate\b/i;
-const QUESTION_START = /^(можно|как|почему|зачем|что|где|когда|стоит|нужен|нужна|нужно|надо|есть ли|поддерживается|должен|должна|должно|how|why|what|where|when|can|could|should|is|are|do|does)\b/i;
+/**
+ * Границы слова для кириллицы: `\b` в JS работает по `\w` (только ASCII), поэтому
+ * `^(как)\b` не совпадал ни с одним русским вопросом, а `обратн\w*` — ни с одним русским
+ * заголовком (DEC-036). Явный класс символов — единственный способ.
+ */
+const WORD_END = '(?=$|[^\\wА-Яа-яЁё])';
+const QUESTION_START = new RegExp(
+  '^(можно|как|почему|зачем|что|где|когда|сколько|какой|какая|какие|каков|чей|стоит|нужен|нужна|нужно|надо|есть ли|поддерживается|должен|должна|должно|how|why|what|where|when|can|could|should|is|are|do|does)' +
+    WORD_END,
+  'i',
+);
+/**
+ * Просьба об объяснении — это вопрос, а не изменение (DEC-037): «Объясни, как работает intake»
+ * не должно открывать change-пакет. Повелительное наклонение само по себе недостаточно
+ * («Объясни и исправь» — работа), поэтому требуется вопросительное слово рядом.
+ */
+const EXPLAIN_START = new RegExp(
+  '^(объясни|объясните|расскажи|расскажите|опиши|опишите|поясни|поясните|растолкуй|растолкуйте|покажи|покажите|перечисли|перечислите)' +
+    WORD_END,
+  'i',
+);
+const INTERROGATIVE = new RegExp(
+  '(?:^|[^\\wА-Яа-яЁё])(как|почему|зачем|что|где|когда|сколько|какой|какая|какие|каков|which|how|why|what|where|when)' +
+    WORD_END,
+  'i',
+);
+/**
+ * Признаки дефекта (DEC-040): жалоба на уже принятое поведение, а не заказ новой работы.
+ * Стем «ошибк» покрывает «ошибка/ошибки/ошибку», поэтому окончания не перечисляются.
+ */
+const DEFECT_MARKERS = new RegExp(
+  '(?:ошибк|баг|дефект|падает|упал|сломал|перестал|регресс|не\\s+работа|некорректн|исключени)' +
+    '|(?:^|[^A-Za-z])(bug|bugs|crash|broken|regression|exception|traceback|stacktrace|does\\s*n.?t\\s+work|does\\s+not\\s+work)' +
+    '(?=$|[^A-Za-z])',
+  'i',
+);
+/**
+ * Заказ новой работы: при таком глаголе слово «ошибка» — это объект работы
+ * («добавь обработку ошибок 500»), а не дефект. «Исправь/почини» сюда не входят — они
+ * как раз означают устранение дефекта.
+ */
+const ADDITIVE_VERBS = new RegExp(
+  '(?:добав|созда|реализ|внедр|подключ|расшир|дополн|настро|перенес|замен)' +
+    '|(?:^|[^A-Za-z])(add|implement|introduce|create)(?=$|[^A-Za-z])',
+  'i',
+);
+
+/**
+ * Принятое поведение существует, только если что-то уже принято: brownfield (baseline)
+ * или хотя бы одно задание `done`. Иначе «баг» — это ещё не написанный код, и вид входа
+ * остаётся `task`/`change`.
+ */
+function hasAcceptedBehavior(ctx) {
+  if (ctx.mode === 'brownfield') return true;
+  return Boolean(ctx.progress && ctx.progress.done > 0);
+}
 
 /** Репозиторий канона: корень совпадает с фабрикой и прогон не начат. */
 function isCanonRepo(args) {
@@ -687,14 +753,16 @@ function classify(text, ctx) {
   if (!started && !ctx.canon) {
     return { kind: 'new', reason: 'прогон не начат: MANIFEST отсутствует или last_completed_step пуст' };
   }
-  if (ctx.changes.length) {
-    return { kind: 'change', reason: `есть незакрытое изменение: ${ctx.changes.join(', ')}` };
-  }
   const mentionsD = /\bD\d{2}\b/.test(t);
   if (mentionsD && ctx.mode === 'greenfield') {
     return { kind: 'task', reason: 'в запросе назван D-промпт, режим greenfield' };
   }
-  const isQuestion = /\?\s*$/.test(t) || QUESTION_START.test(t);
+  // Вопрос проверяется до активного изменения: «почему медленно?» не создаёт change-пакет
+  // (DEC-031). Активный change притягивает только запросы, которые меняют поведение.
+  const isQuestion =
+    /\?\s*$/.test(t) ||
+    QUESTION_START.test(t) ||
+    (EXPLAIN_START.test(t) && INTERROGATIVE.test(t));
   const hasVerb = CHANGE_VERBS.test(t);
   if (isQuestion && !hasVerb) {
     return { kind: 'question', reason: 'вопросительная форма без глагола изменения' };
@@ -705,6 +773,21 @@ function classify(text, ctx) {
       reason: 'неоднозначно: форма вопроса, но есть глагол изменения',
       options: ['question', 'change'],
     };
+  }
+  /**
+   * Дефект проверяется до активного изменения (DEC-040): жалоба на принятое поведение —
+   * это `bugfix` даже когда открыт change-пакет, потому что причина идёт в `proposal.md` §1,
+   * а не растворяется в чужой дельте. Заказ новой работы («добавь обработку ошибок»)
+   * дефектом не считается: там «ошибка» — объект работы.
+   */
+  if (DEFECT_MARKERS.test(t) && !ADDITIVE_VERBS.test(t) && hasAcceptedBehavior(ctx)) {
+    return {
+      kind: 'bugfix',
+      reason: 'признак дефекта при принятом поведении: причина — в proposal.md §1',
+    };
+  }
+  if (ctx.changes.length) {
+    return { kind: 'change', reason: `есть незакрытое изменение: ${ctx.changes.join(', ')}` };
   }
   if (ctx.mode === 'brownfield') {
     return { kind: 'change', reason: 'изменение в режиме brownfield' };
@@ -1034,11 +1117,20 @@ function cmdClose(args, outRoot) {
     }
   }
 
+  const alreadyClosed = /^\|\s*статус\s*\|\s*closed/i.test(hit.text);
+  const prevRef = (hit.text.match(/^\|\s*связано\s*\|\s*(.+?)\s*\|/m) || [])[1] || '';
+
   let text = hit.text;
   text = text.replace(/^\|\s*статус\s*\|.*$/m, '| статус | closed |');
   text = text.replace(/^\|\s*связано\s*\|.*$/m, `| связано | ${ref} |`);
   fs.writeFileSync(hit.full, text, 'utf8');
-  console.log(`closed ${hit.id} → ${ref}`);
+  // Повторное закрытие не ошибка, но и не «только что закрыли»: факт должен быть виден.
+  if (alreadyClosed) {
+    const was = prevRef && prevRef !== ref ? ` (было ${prevRef})` : ' (запись уже была закрыта)';
+    console.log(`closed ${hit.id} → ${ref}${was}`);
+  } else {
+    console.log(`closed ${hit.id} → ${ref}`);
+  }
   return 0;
 }
 

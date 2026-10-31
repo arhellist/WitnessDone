@@ -81,7 +81,7 @@ Scripts `lint` согласованы с `.cursorrules`.
 
 ## VerificationTax + Agent Harness + Context RAG + Contour smoke (обязательно с v1.10)
 
-1. Скопируй `SEED/sp-tools/` → `PROJECT_ROOT/scripts/sp-tools/` (или `witness-done/SEED/sp-tools` оставь и укажи PATH в tooling).
+1. CLI уже доступен по `witness-done/SEED/sp-tools/` — копировать не нужно (DEC-034). Если проект исторически держит копию в `scripts/sp-tools/`, она допустима, но путь в `OUTPUT/tooling/` должен быть один.
 2. Создай **`OUTPUT/tooling/verify-commands.md`**: команды lint/typecheck/test; **wave smoke** vs **full product-smoke**; как вызывать `sp-verify --d Dxx --gate pre_ci` и `sp-verify --gate pre_release`.
 3. Создай **`OUTPUT/tooling/harness.md`** по `catalogs/agent-harness.md`: loop, Axx → evidence `acceptance_ids`, resume-фразы, запрет done без evidence.
 4. Из **`SEED/smoke/`** материализуй:
@@ -111,18 +111,18 @@ Scripts `lint` согласованы с `.cursorrules`.
 
    Второй прогон — то, что раньше называлось «нет runtime-верификации». Он поднимает окружение,
    ждёт готовности, гоняет проверки по фразам, всегда снимает окружение и пишет акт.
-5. В `cicd-and-environments.md` явно: **pre_ci локально до push**; CI — второй прогон unit; **wave** после `split_group`; **pre_release** + full smoke до staging/prod.
-6. CI workflow: не soft-fail typecheck/test на app; **обязателен** job проверки входа и актов:
+7. В `cicd-and-environments.md` явно: **pre_ci локально до push**; CI — второй прогон unit; **wave** после `split_group`; **pre_release** + full smoke до staging/prod.
+8. CI workflow: не soft-fail typecheck/test на app; **обязателен** job проверки входа и актов:
    `sp doctor --strict`, `sp rules --check`, `sp-verify --gate evidence-sync` (шаблон —
    `SEED/ci.yml.example`). Правка кода без акта по затронутым D не должна проходить PR.
 
 ## Вход, правила IDE и pre-commit (обязательно с v1.14)
 
-1. Скопируй `SEED/sp-tools/` в `PROJECT_ROOT/scripts/sp-tools/` — вместе с `sp.mjs`
-   (единый вход: `status`, `intake`, `next`, `decide`, `close`, `rules`, `doctor`).
+1. CLI живёт в `witness-done/SEED/sp-tools/` — копия в `scripts/sp-tools/` не нужна (DEC-034);
+   единый вход: `status`, `intake`, `next`, `decide`, `close`, `rules`, `doctor`.
 2. Проверь, что адаптеры IDE на месте после шага 02:
    ```bash
-   node scripts/sp-tools/sp.mjs rules --check   # exit 0
+   node witness-done/SEED/sp-tools/sp.mjs rules --check   # exit 0
    ```
    Если шаг 02 пропущен или правила правили руками — `sp rules --sync`.
 3. Скопируй `SEED/git-hooks/pre-commit` в `.git/hooks/pre-commit` (или настрой `core.hooksPath`)
@@ -154,7 +154,7 @@ Scripts `lint` согласованы с `.cursorrules`.
 - Линтер для каждого языка v1 + команда в CI  
 - `cicd-and-environments.md` заполнен (не «TODO later»)  
 - `verify-commands.md` + `harness.md` + `entry.md` есть  
-- `scripts/sp-tools/sp.mjs` скопирован, `sp rules --check` → exit 0, pre-commit установлен  
+- CLI доступен по `witness-done/SEED/sp-tools/` (копия не требуется, DEC-034), `sp rules --check` → exit 0, pre-commit установлен  
 - workflow содержит джобы `doctor` и `rules` (вход и адаптеры проверяются в PR)  
 - product-smoke runbook + wave-api-smoke script созданы из SEED  
 - `OUTPUT/runtime/runtime-plan.json` собран из входов прогона (не заглушка), `--gate runtime-plan` → `tax_pass: true`  

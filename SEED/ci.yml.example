@@ -44,6 +44,7 @@ jobs:
       - run: npm test
 
   # Вход и правила агента: протокол, адаптеры IDE, журнал решений
+  # Путь к CLI один: witness-done/SEED/sp-tools/ (копия в scripts/sp-tools/ не нужна — DEC-034)
   entry-and-rules:
     runs-on: ubuntu-latest
     steps:
@@ -52,9 +53,9 @@ jobs:
         with:
           node-version: "20"
       - name: Адаптеры IDE синхронны с AGENTS.md
-        run: node scripts/sp-tools/sp.mjs rules --check
+        run: node witness-done/SEED/sp-tools/sp.mjs rules --check
       - name: Вход, решения и акты (strict)
-        run: node scripts/sp-tools/sp.mjs doctor --strict
+        run: node witness-done/SEED/sp-tools/sp.mjs doctor --strict
 
   # Сверка done ↔ evidence (progress.md против OUTPUT/evidence/Dxx.json)
   evidence-gate:
@@ -65,7 +66,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: node scripts/sp-tools/sp-verify.mjs --gate evidence-sync
+      - run: node witness-done/SEED/sp-tools/sp-verify.mjs --gate evidence-sync
 
   # НЕ включать auto-deploy в production на push.
   # deploy-staging:

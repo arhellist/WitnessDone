@@ -123,6 +123,10 @@ start_run "$P3" brownfield R01
 mkdir -p "$P3/spec-state/changes/add-avatar"
 node "$CLI" intake "Поменяй формат аватара" --root "$P3" > "$TMP/c.out" 2>&1
 grep -q 'kind: change' "$TMP/c.out" && ok "классификация change (активный change)" || bad "ожидали change: $(cat "$TMP/c.out")"
+# DEC-031: вопрос не становится change-пакетом, даже если change уже открыт
+node "$CLI" intake "Почему аватар грузится медленно?" --root "$P3" > "$TMP/cq.out" 2>&1
+grep -q 'kind: question' "$TMP/cq.out" && ok "1.30: вопрос при активном change остаётся question (DEC-031)" \
+  || bad "вопрос уехал в change: $(cat "$TMP/cq.out")"
 rm -rf "$P3/spec-state/changes/add-avatar"
 node "$CLI" intake "Поменяй формат аватара" --root "$P3" > "$TMP/c2.out" 2>&1
 grep -q 'kind: change' "$TMP/c2.out" && ok "классификация change (brownfield)" || bad "ожидали change: $(cat "$TMP/c2.out")"
@@ -1552,6 +1556,209 @@ node "$VERIFY" --gate pre_release --root "$P26" > "$TMP/bn7b.out" 2>&1
 grep -q 'связь фраз и тестов изменилась после приёмки' "$TMP/bn7b.out" \
   && ok "1.27: правка фразы после приёмки видна в релизе" \
   || bad "фразу переписали, акт остался «принятым»"
+
+echo
+# 11. 1.30: регрессии аудита — DEC-031 (вопрос при change), DEC-032 (русский негативный
+#     сценарий), DEC-033 (PROJECT_ROOT, когда CLI запущен из каталога фабрики).
+P30="$TMP/p30"
+new_project p30
+start_run "$P30" brownfield R01
+mkdir -p "$P30/witness-done/spec-state/baseline/auth"
+cp "$ROOT/TEMPLATES/spec-state-config.yaml" "$P30/witness-done/spec-state/config.yaml"
+cat > "$P30/witness-done/spec-state/baseline/auth/spec.md" <<'BASE'
+# Auth — baseline
+
+### Requirement: Login
+Система MUST авторизовывать пользователя по логину и паролю.
+
+#### Scenario: Успешный вход
+- GIVEN пользователь зарегистрирован
+- WHEN он вводит верные данные
+- THEN он получает сессию
+
+#### Scenario: Неверный пароль
+- GIVEN пользователь зарегистрирован
+- WHEN он вводит неверный пароль
+- THEN он получает отказ
+BASE
+node "$VERIFY" --gate baseline --root "$P30" > "$TMP/nb1.out" 2>&1
+grep -q '"tax_pass": true' "$TMP/nb1.out" && ok "1.30: русский негативный сценарий проходит baseline (DEC-032)" \
+  || bad "«Неверный пароль» отвергнут как не-негативный: $(tail -5 "$TMP/nb1.out")"
+sed -i.bak 's/#### Scenario: Неверный пароль/#### Scenario: Повторный вход/' "$P30/witness-done/spec-state/baseline/auth/spec.md"
+rm -f "$P30/witness-done/spec-state/baseline/auth/spec.md.bak"
+expect 2 "1.30: baseline без негативного сценария по-прежнему падает" node "$VERIFY" --gate baseline --root "$P30"
+sed -i.bak 's/#### Scenario: Повторный вход/#### Scenario: Неверный пароль/' "$P30/witness-done/spec-state/baseline/auth/spec.md"
+rm -f "$P30/witness-done/spec-state/baseline/auth/spec.md.bak"
+# из каталога фабрики её собственный CLI обязан найти корень проекта, а не искать spec-state в себе
+( cd "$P30/witness-done" && node SEED/sp-tools/sp-verify.mjs --gate baseline ) > "$TMP/nb2.out" 2>&1
+if grep -q '"tax_pass": true' "$TMP/nb2.out"; then
+  ok "1.30: sp-verify из witness-done/ находит PROJECT_ROOT (DEC-033)"
+else
+  bad "sp-verify из witness-done/ не нашёл проект: $(tail -5 "$TMP/nb2.out")"
+fi
+
+# 12. 1.31: регрессии второго аудита — DEC-035 (runtime-plan не исполняет),
+#     DEC-036 (кириллица в регулярках: совместимость, ярлыки, блокеры), DEC-037 (объяснение
+#     — вопрос), DEC-038 (чужой PRODUCES не долг).
+P35="$TMP/p35"
+new_project p35
+start_run "$P35" greenfield 08
+mkdir -p "$P35/witness-done/OUTPUT/evidence" "$P35/witness-done/OUTPUT/runtime" "$P35/src"
+printf 'v1\n' > "$P35/src/a.py"
+cat > "$P35/witness-done/OUTPUT/evidence/D03.json" <<'ACT35'
+{"d":"D03","gate":"pre_ci","level":"L1","tax_pass":true,"fit":{"acceptance_ids":["A03.1"],"produces":["src/a.py"]}}
+ACT35
+git -C "$P35" init -q
+git -C "$P35" -c user.email=sp@test -c user.name=sp add -A
+git -C "$P35" -c user.email=sp@test -c user.name=sp commit -qm init
+cat > "$P35/witness-done/OUTPUT/runtime/runtime-plan.json" <<PLAN35
+{
+  "version": 1,
+  "stack": ["node"],
+  "up": [{ "id": "noop", "cmd": "true", "ready": { "type": "cmd", "cmd": "true", "timeout_s": 5 } }],
+  "down": [{ "cmd": "true" }],
+  "verify": [{ "acceptance": "A03.1", "cmd": "touch $P35/EXECUTED.marker", "expect_exit": 0 }]
+}
+PLAN35
+# Гейт «проверить план» не имеет права трогать окружение: до v1.31 он исполнял план и писал
+# акт исполнения, который релиз принимал за прогон (DEC-035).
+node "$VERIFY" --gate runtime-plan --root "$P35" > "$TMP/rp35.out" 2>&1
+if [[ $? -eq 0 ]] && grep -q '"executed": false' "$TMP/rp35.out"; then
+  ok "1.31: --gate runtime-plan без флагов — статика (DEC-035)"
+else
+  bad "--gate runtime-plan не статичен: $(tail -5 "$TMP/rp35.out")"
+fi
+[[ -f "$P35/witness-done/OUTPUT/evidence/RELEASE-runtime-plan.json" ]] \
+  && ok "1.31: статика пишет RELEASE-runtime-plan.json" || bad "акт статического гейта не создан"
+[[ ! -f "$P35/witness-done/OUTPUT/evidence/RELEASE-runtime-verify.json" ]] \
+  && ok "1.31: статика не выдаёт акт исполнения" || bad "статика пишет RELEASE-runtime-verify.json"
+[[ ! -f "$P35/EXECUTED.marker" ]] \
+  && ok "1.31: статика не выполнила verify[] из плана" || bad "статика исполнила команду плана"
+expect 0 "1.31: --gate runtime исполняет план" node "$VERIFY" --gate runtime --root "$P35"
+[[ -f "$P35/EXECUTED.marker" ]] && ok "1.31: исполнение действительно гоняет verify[]" || bad "runtime не исполнил план"
+
+# DEC-036: предложение изменения на русском (как требует R02 и language-policy)
+P36="$TMP/p36"
+new_project p36
+start_run "$P36" brownfield R02
+mkdir -p "$P36/witness-done/spec-state/baseline/core" "$P36/witness-done/spec-state/changes/ru/specs"
+cp "$ROOT/TEMPLATES/spec-state-config.yaml" "$P36/witness-done/spec-state/config.yaml"
+printf '# Base\n\n### Requirement: Old\n\nThe system MUST exist.\n' > "$P36/witness-done/spec-state/baseline/core/spec.md"
+cat > "$P36/witness-done/spec-state/changes/ru/specs/core.md" <<'SPEC36'
+## ADDED Requirements
+
+### Requirement: Экспорт
+
+Система MUST выгружать отчёт.
+
+#### Scenario: Успешный экспорт
+- GIVEN есть данные
+- WHEN администратор запрашивает выгрузку
+- THEN он получает файл
+
+#### Scenario: Пустой список
+- GIVEN данных нет
+- WHEN администратор запрашивает выгрузку
+- THEN он получает файл с заголовком
+SPEC36
+printf '# Proposal\n\n## 5. Риски и обратная совместимость\n\nИзменение breaking: поле переименовано.\n' \
+  > "$P36/witness-done/spec-state/changes/ru/proposal.md"
+printf -- '- [x] задача\n' > "$P36/witness-done/spec-state/changes/ru/tasks.md"
+node "$VERIFY" --change ru --gate change --skip-commands --root "$P36" > "$TMP/ch36.out" 2>&1
+if [[ $? -eq 0 ]]; then
+  ok "1.31: «Обратная совместимость» по-русски проходит change (DEC-036)"
+else
+  bad "русский заголовок совместимости отвергнут: $(grep -o 'missing[^\"]*' "$TMP/ch36.out" | head -1)"
+fi
+sed -i.bak 's/обратная совместимость/Backwards Compatibility/' "$P36/witness-done/spec-state/changes/ru/proposal.md"
+rm -f "$P36/witness-done/spec-state/changes/ru/proposal.md.bak"
+expect 0 "1.31: английский заголовок совместимости тоже проходит" node "$VERIFY" --change ru --gate change --skip-commands --root "$P36"
+
+# DEC-036: ярлык неполноты по-русски ловится, а его опровержение — нет
+node --input-type=module -e "
+import { findIncompletenessLabels } from '$ROOT/SEED/sp-tools/evidence-lib.mjs';
+const bad = findIncompletenessLabels('Сделаем упрощённую версию отчёта');
+const ok1 = findIncompletenessLabels('MVP запрещён: объём описывается полной комплектацией');
+if (!bad.length) { console.error('ярлык не найден'); process.exit(1); }
+if (ok1.length) { console.error('опровержение принято за нарушение'); process.exit(1); }
+" > /dev/null 2>&1 && ok "1.31: «упрощённая версия» — ярлык неполноты (DEC-036)" \
+  || bad "ярлыки неполноты на кириллице не работают"
+
+# DEC-036: открытый блокер по-русски обязан валить релиз
+P37="$TMP/p37"
+new_project p37
+start_run "$P37" greenfield 10
+mkdir -p "$P37/witness-done/OUTPUT/roadmaps" "$P37/witness-done/OUTPUT/docs"
+printf '| D | Кратко | split_group | Статус | evidence_ref | Доказательства | Обновлено | Заметки |\n|---|---|---|---|---|---|---|---|\n| D01 | x | — | pending | — | — | 2026-10-31 | — |\n' \
+  > "$P37/witness-done/OUTPUT/roadmaps/progress.md"
+printf '| ID | Конфликт | Статус |\n|----|----------|--------|\n| C1 | blocker: два источника правды | открыт |\n' \
+  > "$P37/witness-done/OUTPUT/docs/07_conflicts.md"
+node "$VERIFY" --gate pre_release --root "$P37" > "$TMP/pr37.out" 2>&1
+grep -q '07_conflicts.md: 1 строк' "$TMP/pr37.out" && ok "1.31: открытый блокер по-русски валит pre_release (DEC-036)" \
+  || bad "русский открытый блокер прошёл релиз"
+
+# DEC-037: просьба об объяснении — вопрос, а не изменение
+P38="$TMP/p38"
+new_project p38
+start_run "$P38" greenfield 09
+node "$CLI" intake "Объясни как работает intake" --root "$P38" > "$TMP/in37.out" 2>&1
+grep -q '^kind: question' "$TMP/in37.out" && ok "1.31: «Объясни как…» — question (DEC-037)" \
+  || bad "просьба об объяснении ушла в change: $(grep '^kind' "$TMP/in37.out")"
+node "$CLI" intake "Добавь колонку в отчёт" --root "$P38" > "$TMP/in38.out" 2>&1
+grep -q '^kind: task' "$TMP/in38.out" && ok "1.31: запрос без глагола объяснения остаётся работой" \
+  || bad "обычный запрос классифицирован неверно: $(grep '^kind' "$TMP/in38.out")"
+
+# DEC-036/037 (хвост): упоминание `Axx.k` в решении — не признак незаполненного шаблона
+P39="$TMP/p39"
+new_project p39
+start_run "$P39" greenfield 09
+node "$CLI" decide "Смоук обязан метить фразы Axx.k, иначе атрибуция ручная" --root "$P39" >/dev/null 2>&1
+python3 - "$P39" <<'DEC39'
+import glob, sys
+p = glob.glob(sys.argv[1] + '/journal/decisions/DEC-001-*.md')[0]
+t = open(p, encoding='utf-8').read()
+t = t.replace('**Контекст.** Что вынудило выбирать и какие ограничения нельзя обойти.', '**Контекст.** Смоук не называл фразы, атрибуция была ручной.')
+t = t.replace('**Альтернативы.** Что отвергли и почему. Если альтернатив нет — так и написать.', '**Альтернативы.** Оставить нумерацию контура — отвергнуто: номера не связаны с контрактом.')
+t = t.replace('**Чем подтверждено.** `Axx.k`, тест, артефакт, раздел спецификации. Решение без подтверждения\nне закрывает intake.', '**Чем подтверждено.** Скрипт метит `Axx.k`; проверка в selftest.')
+open(p, 'w', encoding='utf-8').write(t)
+DEC39
+node "$CLI" journal --check --root "$P39" > "$TMP/jr39.out" 2>&1
+if grep -q 'DEC-001' "$TMP/jr39.out"; then
+  bad "решение с упоминанием Axx.k ложно считается незаполненным"
+else
+  ok "1.31: упоминание Axx.k в решении не делает его незаполненным"
+fi
+node "$CLI" decide "Пустой шаблон" --root "$P39" >/dev/null 2>&1
+node "$CLI" journal --check --root "$P39" > "$TMP/jr39b.out" 2>&1
+grep -q 'DEC-002' "$TMP/jr39b.out" && ok "1.31: шаблон без правок по-прежнему считается незаполненным" \
+  || bad "незаполненный шаблон решения прошёл проверку"
+
+# DEC-040: вид bugfix распознаётся машинно, но только при принятом поведении.
+# Фикстура: одно задание уже `done` — значит, ломать есть что.
+P40="$TMP/p40"
+new_project p40
+start_run "$P40" greenfield 09
+mkdir -p "$P40/witness-done/OUTPUT/roadmaps"
+printf '| D | Кратко | split_group | Статус | evidence_ref | Доказательства | Обновлено | Заметки |\n|---|---|---|---|---|---|---|---|\n| D01 | экспорт | — | done | evidence/D01.json | tests/x.test.ts | 2026-10-31 | — |\n' \
+  > "$P40/witness-done/OUTPUT/roadmaps/progress.md"
+node "$CLI" intake "Ошибка 500 при выгрузке" --root "$P40" > "$TMP/in40.out" 2>&1
+grep -q '^kind: bugfix' "$TMP/in40.out" && ok "1.31: жалоба на дефект — bugfix (DEC-040)" \
+  || bad "дефект не распознан: $(grep '^kind' "$TMP/in40.out")"
+grep -q 'proposal.md §1' "$TMP/in40.out" && ok "1.31: маршрут bugfix требует причину в §1" \
+  || bad "маршрут bugfix не указывает причину: $(grep '^next' "$TMP/in40.out")"
+node "$CLI" intake "Добавь обработку ошибок 500" --root "$P40" > "$TMP/in41.out" 2>&1
+grep -q '^kind: task' "$TMP/in41.out" && ok "1.31: заказ новой работы дефектом не считается" \
+  || bad "«добавь обработку ошибок» принято за дефект: $(grep '^kind' "$TMP/in41.out")"
+node "$CLI" intake "Кнопка не работает" --root "$P40" > "$TMP/in42.out" 2>&1
+grep -q '^kind: bugfix' "$TMP/in42.out" && ok "1.31: «не работает» — bugfix" \
+  || bad "«не работает» не распознано: $(grep '^kind' "$TMP/in42.out")"
+# Дефекта нет там, где нечего ломать: принятого поведения ещё нет
+P41="$TMP/p41"
+new_project p41
+start_run "$P41" greenfield 05
+node "$CLI" intake "Ошибка 500 при выгрузке" --root "$P41" > "$TMP/in43.out" 2>&1
+grep -q '^kind: task' "$TMP/in43.out" && ok "1.31: дефект без принятого поведения — не bugfix" \
+  || bad "bugfix без принятого поведения: $(grep '^kind' "$TMP/in43.out")"
 
 echo
 if [[ "$ERR" -eq 0 ]]; then

@@ -6,6 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { resolveProjectRoot } from './evidence-lib.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,6 +19,7 @@ function parseArgs(argv) {
     query: null,
     out: null,
     root: process.cwd(),
+    rootGiven: false,
     factory: null,
     help: false,
     maxChunks: 12,
@@ -32,7 +34,10 @@ function parseArgs(argv) {
     else if (a === '--pack') out.pack = argv[++i];
     else if (a === '--query') out.query = argv[++i];
     else if (a === '--out') out.out = argv[++i];
-    else if (a === '--root') out.root = path.resolve(argv[++i]);
+    else if (a === '--root') {
+      out.root = path.resolve(argv[++i]);
+      out.rootGiven = true;
+    }
     else if (a === '--factory') out.factory = path.resolve(argv[++i]);
     else if (a === '--max-chunks') {
       out.maxChunks = Number(argv[++i]);
@@ -43,6 +48,7 @@ function parseArgs(argv) {
     const cand = path.join(out.root, 'witness-done');
     out.factory = fs.existsSync(cand) ? cand : path.resolve(__dirname, '../..');
   }
+  if (!out.rootGiven) out.root = resolveProjectRoot(out.root, out.factory);
   return out;
 }
 
@@ -55,10 +61,18 @@ function help() {
 }
 
 function outputDir(root, factory) {
-  const a = path.join(factory, 'OUTPUT');
+  // Корень канона: индекс/паки не пишутся в OUTPUT репозитория (DEC-033).
+  const isCanon =
+    path.resolve(root) === path.resolve(factory) &&
+    fs.existsSync(path.join(factory, 'PIPELINE', '00_bootstrap.md')) &&
+    fs.existsSync(path.join(factory, 'catalogs')) &&
+    !fs.existsSync(path.join(factory, 'OUTPUT', 'MANIFEST.md'));
+  if (isCanon) return path.join(factory, '.witness-done-work');
+  // OUTPUT проекта важнее OUTPUT того каталога, откуда запущен CLI (DEC-033).
   const b = path.join(root, 'witness-done', 'OUTPUT');
-  if (fs.existsSync(a)) return a;
+  const a = path.join(factory, 'OUTPUT');
   if (fs.existsSync(b)) return b;
+  if (fs.existsSync(a)) return a;
   return a;
 }
 

@@ -85,7 +85,7 @@
 ## VerificationTax + Agent Harness (обязательно)
 
 - Канон: `catalogs/verification-tax.md`, `catalogs/agent-harness.md`, `catalogs/contour-smoke.md`
-- CLI: `scripts/sp-tools/sp-verify.mjs` (или `witness-done/SEED/sp-tools/`, если не копировали)
+- CLI: `witness-done/SEED/sp-tools/sp-verify.mjs` (единственный путь, копия не нужна — DEC-034)
 - Каждый runtime D: **HOW + INVARIANTS + ACCEPTANCE**; тесты = `Axx.*`
 - Фича принимается в scopes **unit → module → app → eco**, локально **до CI**
 - После PRODUCES: `sp-verify --d Dxx --gate pre_ci` → evidence с `acceptance_ids` (+ `ops_checked` для L2/L3)

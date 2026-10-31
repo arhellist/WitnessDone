@@ -18,6 +18,7 @@ import {
   findIncompletenessLabels,
   gitHead,
   globToRe,
+  resolveProjectRoot,
   sha256,
   reviewCheck,
   seal,
@@ -36,6 +37,7 @@ function parseArgs(argv) {
     change: null,
     gate: 'pre_ci',
     root: process.cwd(),
+    rootGiven: false,
     factory: null,
     skipCommands: false,
     batch: null,
@@ -53,7 +55,10 @@ function parseArgs(argv) {
     else if (a === '--change') out.change = argv[++i];
     else if (a === '--gate') out.gate = argv[++i];
     else if (a === '--batch') out.batch = Number(argv[++i]);
-    else if (a === '--root') out.root = path.resolve(argv[++i]);
+    else if (a === '--root') {
+      out.root = path.resolve(argv[++i]);
+      out.rootGiven = true;
+    }
     else if (a === '--factory') out.factory = path.resolve(argv[++i]);
     else if (a === '--skip-commands') out.skipCommands = true;
     else if (a === '--quick') {
@@ -68,6 +73,7 @@ function parseArgs(argv) {
     const cand = path.join(out.root, 'witness-done');
     out.factory = fs.existsSync(cand) ? cand : path.resolve(__dirname, '../..');
   }
+  if (!out.rootGiven) out.root = resolveProjectRoot(out.root, out.factory);
   return out;
 }
 
@@ -78,7 +84,7 @@ function help() {
   sp-verify.mjs --gate d-prompt-quality [--batch N]
   sp-verify.mjs --gate acceptance [--d D03]     # связь «фраза ACCEPTANCE ↔ тест» + test-plan
   sp-verify.mjs --gate product-smoke [--skip-commands]
-  sp-verify.mjs --gate runtime-plan            # статическая проверка runtime/runtime-plan.json
+  sp-verify.mjs --gate runtime-plan            # статика плана: команды плана не исполняются
   sp-verify.mjs --gate runtime [--budget-min N] # подъём по плану + верификация + teardown
   sp-verify.mjs --gate self-audit
   sp-verify.mjs --gate baseline [--root .]
@@ -105,10 +111,20 @@ function help() {
 }
 
 function outputDir(root, factory) {
-  const a = path.join(factory, 'OUTPUT');
+  // Корень канона: прогона здесь нет, акты не должны попадать в OUTPUT репозитория
+  // (иначе `doctor --strict` и ./validate.sh краснеют после любого гейта). DEC-033.
+  const isCanon =
+    path.resolve(root) === path.resolve(factory) &&
+    fs.existsSync(path.join(factory, 'PIPELINE', '00_bootstrap.md')) &&
+    fs.existsSync(path.join(factory, 'catalogs')) &&
+    !fs.existsSync(path.join(factory, 'OUTPUT', 'MANIFEST.md'));
+  if (isCanon) return path.join(factory, '.witness-done-work');
+  // OUTPUT проекта важнее OUTPUT того каталога, откуда запущен CLI: агент может звать
+  // копию CLI из другого места (`--root <проект>`), и акт обязан лечь в проект (DEC-033).
   const b = path.join(root, 'witness-done', 'OUTPUT');
-  if (fs.existsSync(a)) return a;
+  const a = path.join(factory, 'OUTPUT');
   if (fs.existsSync(b)) return b;
+  if (fs.existsSync(a)) return a;
   return a;
 }
 
@@ -356,10 +372,13 @@ function gitTouched(root, base) {
 /**
  * Plan-to-Proof: симметричная сверка заявленного и тронутого.
  * `proof_debt` — файлы, которые тронуты, но не заявлены: это и есть неоплаченный налог.
+ * Файл, заявленный в PRODUCES другого задания, долгом этого акта не считается (DEC-038):
+ * иначе незакоммиченная работа над D02 валит приёмку D01.
  */
-function planToProof(root, produces, base) {
+function planToProof(root, produces, base, opts = {}) {
   const t = gitTouched(root, base);
   const declared = (produces || []).map((p) => p.replace(/^\.\//, '')).filter(Boolean);
+  const other = (opts.otherDeclared || []).map((p) => p.replace(/^\.\//, '')).filter(Boolean);
   if (!t.ok) {
     return {
       ok: false,
@@ -374,7 +393,9 @@ function planToProof(root, produces, base) {
   }
   const touched = t.files.filter((f) => !BOOKKEEPING.some((p) => f.startsWith(p)));
   const missing = declared.filter((d) => !touched.some((f) => declaredMatches(f, [d])));
-  const extra = touched.filter((f) => !declaredMatches(f, declared));
+  const extra = touched.filter(
+    (f) => !declaredMatches(f, declared) && !declaredMatches(f, other),
+  );
   return {
     ok: true,
     base: t.base,
@@ -385,6 +406,24 @@ function planToProof(root, produces, base) {
     proof_debt: extra,
     note: null,
   };
+}
+
+/**
+ * PRODUCES всех заданий, кроме текущего. Нужны, чтобы не объявлять долгом чужую работу
+ * (DEC-038). Отсутствие каталога промптов — не ошибка: долг просто считается как раньше.
+ */
+function collectOtherProduces(outRoot, currentD) {
+  const dir = path.join(outRoot, 'prompts');
+  if (!fs.existsSync(dir)) return [];
+  const current = String(currentD || '').toUpperCase();
+  const out = [];
+  for (const f of fs.readdirSync(dir)) {
+    if (!/^D\d+.*\.md$/i.test(f)) continue;
+    const d = (f.match(/^D\d+/) || [''])[0].toUpperCase();
+    if (d === current) continue;
+    out.push(...listProduces(fs.readFileSync(path.join(dir, f), 'utf8')));
+  }
+  return [...new Set(out.map((p) => p.replace(/^\.\//, '')).filter(Boolean))];
 }
 
 /** Что изменилось сверх PRODUCES. Акт показывает факт; гейт по репозиторию — sp doctor. */
@@ -953,7 +992,9 @@ function verifyPreCi(args, outRoot) {
   else fitMeta.out_of_produces_note = outside.note;
 
   // Plan-to-Proof: заявлено vs тронуто. Неоплаченный налог — файлы вне PRODUCES.
-  const plan = planToProof(args.root, produces, args.base);
+  const plan = planToProof(args.root, produces, args.base, {
+    otherDeclared: collectOtherProduces(outRoot, args.d),
+  });
   fitMeta.plan = plan;
   if (level !== 'L0') {
     if (!plan.ok) {
@@ -1631,7 +1672,7 @@ function verifyBaseline(args, outRoot) {
             `${domain} / "${req.name}": ${count} scenario(s), ≥2 required (happy path + negative/boundary)`,
           );
         } else if (
-          !/^####\s+Scenario:[^\n]*(negative|boundary|негатив|границ|отказ)/im.test(req.content)
+          !hasNegativeScenario(req.content)
         ) {
           issues.push(`${domain} / "${req.name}": no negative/boundary scenario`);
         }
@@ -1749,7 +1790,11 @@ function verifyPreRelease(outRoot, root = process.cwd()) {
       .split('\n')
       .filter((l) => /^\|/.test(l))
       .filter((l) => /blocker/i.test(l))
-      .filter((l) => /\b(open|открыт\w*|unresolved)\b/i.test(l) && !/\b(closed|закрыт\w*|resolved)\b/i.test(l));
+      .filter(
+        (l) =>
+          /(?:\bopen\b|\bunresolved\b|открыт)/i.test(l) &&
+          !/(?:\bclosed\b|\bresolved\b|закрыт)/i.test(l),
+      );
     if (openRows.length) {
       issues.push(`07_conflicts.md: ${openRows.length} строк(и) с открытым blocker — решение обязательно`);
     }
@@ -1932,6 +1977,48 @@ function splitH2Sections(text) {
   return sections;
 }
 
+/**
+ * Негативный или граничный сценарий по заголовку `#### Scenario:` (DEC-032).
+ * Канон требует русские тексты, поэтому словарь двуязычный: «Неверный пароль» и
+ * «Ошибка записи» — такие же негативные кейсы, как `negative`/`boundary`.
+ * Один помощник для baseline и дельты: правило не должно расходиться между гейтами.
+ */
+const NEGATIVE_SCENARIO = new RegExp(
+  '^####\\s+Scenario:[^\\n]*(' +
+    [
+      'negative',
+      'boundary',
+      'invalid',
+      'error',
+      'fail',
+      'denied',
+      'forbidden',
+      'timeout',
+      'empty',
+      'missing',
+      'негатив',
+      'границ',
+      'отказ',
+      'ошибк',
+      'неверн',
+      'недоступ',
+      'неудач',
+      'провал',
+      'запрет',
+      'некоррект',
+      'невалид',
+      'пуст',
+      'таймаут',
+      'лимит',
+    ].join('|') +
+    ')',
+  'im',
+);
+
+function hasNegativeScenario(content) {
+  return NEGATIVE_SCENARIO.test(content);
+}
+
 function extractRequirements(body) {
   const reqs = [];
   const reqRegex = /^###\s+(?:Requirement|Требование)?[:\s]*(.+)$/gim;
@@ -2018,8 +2105,15 @@ function verifyChange(args, outRoot) {
     } else {
       const proposal = fs.readFileSync(proposalPath, 'utf8');
       const h2 = proposal.split(/\n(?=## )/);
+      /**
+       * Заголовок ищется с явным кириллическим классом (DEC-036): `\w` в JS не покрывает
+       * кириллицу, поэтому `обратн\w*\s+совместим` не совпадал с «Обратная совместимость»,
+       * и proposal по-русски (как требует R02 и language-policy) валился на ровном месте.
+       */
       const compatSection = h2.find((s) =>
-        /backwards?\s+compatibility|обратн\w*\s+совместим/i.test(s.split('\n')[0]),
+        /backwards?\s+compatibility|обратн[\wА-Яа-яЁё-]*\s+совместим|совместимост/i.test(
+          s.split('\n')[0],
+        ),
       );
       if (!compatSection) {
         deltaIssues.push('proposal.md missing "Backwards Compatibility" section');
@@ -2092,7 +2186,7 @@ function verifyChange(args, outRoot) {
             deltaIssues.push(
               `[${sf}] ADDED requirement "${req.name}" has ${scCount} scenario(s), ≥2 required (happy + negative/boundary)`,
             );
-          } else if (!/^####\s+Scenario:[^\n]*(negative|boundary|негатив|границ|отказ)/im.test(req.content)) {
+          } else if (!hasNegativeScenario(req.content)) {
             deltaIssues.push(`[${sf}] ADDED requirement "${req.name}" has no negative/boundary scenario`);
           }
         }
@@ -2110,7 +2204,7 @@ function verifyChange(args, outRoot) {
             deltaIssues.push(
               `[${sf}] MODIFIED requirement "${req.name}" has ${scCount} scenario(s), ≥2 required (happy + negative/boundary)`,
             );
-          } else if (!/^####\s+Scenario:[^\n]*(negative|boundary|негатив|границ|отказ)/im.test(req.content)) {
+          } else if (!hasNegativeScenario(req.content)) {
             deltaIssues.push(`[${sf}] MODIFIED requirement "${req.name}" has no negative/boundary scenario`);
           }
           if (!baselineReqs.has(req.name.toLowerCase())) {
@@ -2280,66 +2374,59 @@ function evidenceSync(outRoot, root) {
  * Исполнение — то, что отличает «план есть» от «план сработал»: up → ready → seed → verify → down.
  */
 async function verifyRuntime(args, outRoot) {
+  /**
+   * Два разных гейта с двумя разными актами (DEC-035). До v1.31 `--gate runtime-plan` исполнял
+   * план: статика включалась только `--skip-commands`, а канон и PIPELINE/08 велят запускать
+   * гейт без флага. В результате «проверил план» поднимало окружение, гоняло verify[] и писало
+   * акт исполнения, который `pre_release` принимал за доказанный прогон.
+   */
+  const staticOnly = args.gate === 'runtime-plan' || args.skipCommands;
+  const gateName = staticOnly ? 'runtime-plan' : 'runtime';
+  const evidenceName = staticOnly ? 'RELEASE-runtime-plan.json' : 'RELEASE-runtime-verify.json';
+  const finish = (payload) => {
+    const evidence = {
+      gate: gateName,
+      plan: PLAN_REL,
+      executed: false,
+      ...payload,
+      timestamp: new Date().toISOString(),
+    };
+    writeEvidence(outRoot, { ...evidence, evidence_name: evidenceName }, args.root);
+    console.log(JSON.stringify(evidence, null, 2));
+    return evidence.tax_pass ? 0 : 2;
+  };
+
   const loaded = loadPlan(outRoot);
   const issues = [...loaded.issues];
   if (!loaded.required) {
-    const evidence = {
-      gate: 'runtime',
-      plan: PLAN_REL,
+    return finish({
       required: false,
-      issues: [`нет ${PLAN_REL} — подъём рантайма и верификация не зафиксированы`],
+      issues: [...issues, `нет ${PLAN_REL} — подъём рантайма и верификация не зафиксированы`],
       tax_pass: false,
-      timestamp: new Date().toISOString(),
-    };
-    writeEvidence(outRoot, { ...evidence, evidence_name: 'RELEASE-runtime-verify.json' }, args.root);
-    console.log(JSON.stringify(evidence, null, 2));
-    return 2;
+    });
   }
-  if (loaded.read_error) {
-    const evidence = { gate: 'runtime', plan: PLAN_REL, issues, tax_pass: false, timestamp: new Date().toISOString() };
-    writeEvidence(outRoot, { ...evidence, evidence_name: 'RELEASE-runtime-verify.json' }, args.root);
-    console.log(JSON.stringify(evidence, null, 2));
-    return 2;
-  }
+  if (loaded.read_error) return finish({ issues, tax_pass: false });
 
   const stat = checkPlan(args.root, outRoot, loaded.plan);
   issues.push(...stat.issues);
 
-  if (args.skipCommands) {
-    const evidence = {
-      gate: 'runtime-plan',
-      plan: PLAN_REL,
+  // Статический гейт не исполняет план ни при каких флагах.
+  if (staticOnly) {
+    return finish({
       stack: loaded.plan.stack || [],
       planned: stat.coverage.covered.map((c) => c.acceptance),
       na: stat.coverage.na.map((c) => c.acceptance),
       uncovered: stat.coverage.uncovered.map((u) => u.acceptance),
       issues,
       tax_pass: issues.length === 0,
-      executed: false,
-      timestamp: new Date().toISOString(),
-    };
-    writeEvidence(outRoot, { ...evidence, evidence_name: 'RELEASE-runtime-plan.json' }, args.root);
-    console.log(JSON.stringify(evidence, null, 2));
-    return issues.length === 0 ? 0 : 2;
+    });
   }
 
   // План неисполним — исполнение не начинаем: неверная команда не должна трогать окружение.
-  if (stat.issues.length) {
-    const evidence = {
-      gate: 'runtime',
-      plan: PLAN_REL,
-      issues,
-      executed: false,
-      tax_pass: false,
-      timestamp: new Date().toISOString(),
-    };
-    writeEvidence(outRoot, { ...evidence, evidence_name: 'RELEASE-runtime-verify.json' }, args.root);
-    console.log(JSON.stringify(evidence, null, 2));
-    return 2;
-  }
+  if (stat.issues.length) return finish({ issues, tax_pass: false });
 
   const evidence = await executePlan(args.root, outRoot, loaded.plan, { budgetMin: args.budgetMin });
-  writeEvidence(outRoot, { ...evidence, evidence_name: 'RELEASE-runtime-verify.json' }, args.root);
+  writeEvidence(outRoot, { ...evidence, evidence_name: evidenceName }, args.root);
   console.log(JSON.stringify(evidence, null, 2));
   return evidence.tax_pass ? 0 : 2;
 }

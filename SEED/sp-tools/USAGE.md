@@ -8,8 +8,8 @@
 > миграций не предусмотрено.
 >
 > В документации короткая форма `sp status` / `sp-verify …` означает
-> `node scripts/sp-tools/sp.mjs status` (после шага 08) или
-> `node witness-done/SEED/sp-tools/sp.mjs status` (если CLI не копировали).
+> `node witness-done/SEED/sp-tools/sp.mjs status`; копировать CLI в `scripts/sp-tools/` не нужно
+> (DEC-034). В корне канона — `node SEED/sp-tools/sp.mjs status`.
 
 ## Команды
 
@@ -70,7 +70,7 @@ node witness-done/SEED/sp-tools/sp-verify.mjs --help
 | `--no-cache` | `update` | Игнорировать кэш (TTL 24 ч) |
 | `--timeout <мс>` | `update` | Таймаут HTTPS-запроса, по умолчанию 8000 |
 | `--json` | все | Машинный вывод вместо человекочитаемого |
-| `--root <путь>` | все | Корень проекта (по умолчанию текущий каталог) |
+| `--root <путь>` | все | Корень проекта. По умолчанию: git-корень, иначе родитель `witness-done/`, иначе текущий каталог; явный флаг всегда приоритетен |
 | `--factory <путь>` | все | Корень канона (по умолчанию `<root>/witness-done`, иначе каталог скрипта) |
 
 Самопроверка CLI на одноразовых фикстурах (не трогает проект):
@@ -160,10 +160,10 @@ doctor: ok (strict) — корень канона
 |---------|--------|
 | нет `OUTPUT/MANIFEST.md` или `last_completed_step: —`, это проект | `new` |
 | корень канона (root = фабрика, прогона нет) | `change` |
-| есть незакрытый `spec-state/changes/<id>` | `change` |
 | в тексте `D\d\d` и `MODE: greenfield` | `task` |
 | вопрос без глагола изменения | `question` |
 | вопрос + глагол изменения | `exit 3` (нужен человек) |
+| есть незакрытый `spec-state/changes/<id>` и запрос не вопрос | `change` |
 | иначе brownfield | `change` |
 | иначе greenfield | `task` |
 
@@ -193,7 +193,7 @@ sp doctor --strict             # гейт входа; --strict = предупр�
 | `--validate` | Gate must_hit / deny / max_chunks → `Pxx.validation.json` (поддержка `OUTPUT/` и `spec-state/`) |
 | `--query "…"` | Черновик кандидатов (keyword; embeddings — опционально позже) |
 | `--out path` | Куда писать draft pack |
-| `--root path` | PROJECT_ROOT (default: cwd) |
+| `--root path` | PROJECT_ROOT (default: git-корень, иначе родитель `witness-done/`, иначе cwd) |
 | `--factory path` | путь к witness-done (default: `./witness-done`) |
 
 **Важно:** `--validate` **не создаёт** pack. Отсутствующий pack — это exit 2 и явная ошибка: набор

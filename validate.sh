@@ -1000,6 +1000,27 @@ else
   fail "канон не описывает связь «фраза ↔ тест»"
 fi
 [[ -f "$ROOT/TEMPLATES/test-plan.md" ]] && ok "TEMPLATES/test-plan.md" || fail "TEMPLATES/test-plan.md missing"
+
+# --- 1.17: ссылки в документации живые, путь CLI один (DEC-034) ---
+STALE=$(grep -rnE 'node +scripts/sp-tools/' "$ROOT/TEMPLATES" "$ROOT/PIPELINE" "$ROOT/SEED" \
+        --include='*.md' --include='*.example' 2>/dev/null | grep -v '/\.witness-done-work/' || true)
+if [[ -z "$STALE" ]]; then
+  ok "DEC-034: ни один шаблон/пайплайн/CI не зовёт CLI по устаревшему пути scripts/sp-tools"
+else
+  fail "DEC-034: устаревший путь запуска CLI (нужен witness-done/SEED/sp-tools/):"
+  echo "$STALE" | head -5 | sed 's/^/       /'
+fi
+BROKEN=""
+while IFS= read -r ref; do
+  [[ -f "$ROOT/$ref" ]] || BROKEN="$BROKEN $ref"
+done < <(grep -rhoE '(catalogs|TEMPLATES|PIPELINE)/[A-Za-z0-9._-]+\.md' "$ROOT/README.md" \
+          "$ROOT/TEMPLATES" "$ROOT/PIPELINE" "$ROOT/catalogs" "$ROOT/SEED" 2>/dev/null \
+          | grep -v '/\.witness-done-work/' | sort -u)
+if [[ -z "$BROKEN" ]]; then
+  ok "ссылки на catalogs/ TEMPLATES/ PIPELINE/ из документации существуют"
+else
+  fail "битые ссылки в документации:$BROKEN"
+fi
 if [[ "${SP_SKIP_SELFTEST:-0}" == "1" ]]; then
   echo "  SKIP selftest sp.mjs (SP_SKIP_SELFTEST=1)"
 elif command -v node >/dev/null 2>&1; then

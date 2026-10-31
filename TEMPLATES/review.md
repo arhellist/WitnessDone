@@ -1,7 +1,7 @@
 # Review — шаблон артефакта проверки акта
 
 > Путь: `OUTPUT/evidence/D{{NN}}.review.json`  
-> Канон: `catalogs/verification-tax.md` («Review-артефакт»), `catalogs/review.md`
+> Канон: `catalogs/verification-tax.md` («Review-артефакт»)
 
 Review существует затем, чтобы «человек прочитал акт» перестало быть непроверяемым утверждением.
 Файл пишет `sp review`; руками он не создаётся.
